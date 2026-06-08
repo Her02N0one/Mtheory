@@ -92,12 +92,12 @@ step falls one place too early. The pattern is broken.
 
 ## Phase 5 — The fix: sharps and flats
 
-To repair the G scale we need to **raise [[F]] by one half step** — from the
+To repair the [[G]] scale we need to **raise [[F]] by one half step** — from the
 white key to the black key between [[F]] and [[G]]. That restores the **W–W–H**
 shape of the second tetrachord.
 
 The symbol that raises a pitch by a half step is the **sharp** (♯). The modified
-note is written **F♯** (F-sharp).
+note is written **[[F#]]** (F-sharp).
 
 :::callout info
 When we **say** a note name with an accidental, the accidental comes **last**:
@@ -108,7 +108,7 @@ always appears **before** the notehead it modifies.
 :::widget keyview {root: "G4", scale: "major", steps: true, labels: "both", tetrachords: true, interactive: true}
 :::
 
-Both tetrachords now read **W–W–H**. The only difference from C major is that
+Both tetrachords now read **W–W–H**. The only difference from [[C]] major is that
 one note — degree 7 — has been raised by a half step.
 
 ## Phase 6 — Accidentals
@@ -129,27 +129,27 @@ five kinds:
 Every major scale uses all seven letter names exactly once — no letter skipped,
 none repeated.
 
-This is why G major uses **[[F♯]]**, not **[[G♭]]**. Both are the same key on
-the piano (enharmonic equivalents), but [[G♭]] would give two notes named G
-(degrees 1 and 7) and skip F entirely — violating the one-of-each-letter rule.
+This is why [[G]] major uses **[[F#]]**, not **[[Gb]]**. Both are the same key on
+the piano (enharmonic equivalents), but [[Gb]] would give two notes named [[G]]
+(degrees 1 and 7) and skip [[F]] entirely — violating the one-of-each-letter rule.
 
 :::callout key
 **Spelling rule:** in any major or minor scale, each letter name appears exactly
-once. If you need to raise the 7th degree of G major, the note must be spelled
-F♯ (raising F), not G♭ (lowering G). The music looks different on the staff and
+once. If you need to raise the 7th degree of [[G]] major, the note must be spelled
+[[F#]] (raising [[F]]), not [[Gb]] (lowering [[G]]). The music looks different on the staff and
 the logic of scale degrees breaks down if you substitute enharmonic spellings.
 :::
 
-## Phase 8 — C major on the neck
+## Phase 8 — [[C]] major on the neck
 
-You now know C major as a pattern of white keys and the rule **W – W – H – W – W – W – H**.
+You now know [[C]] major as a pattern of white keys and the rule **W – W – H – W – W – W – H**.
 On the guitar that rule becomes fret distances: a **whole step** is always **two frets**;
 a **half step** is always **one fret**.
 
-Below, the keyboard (showing one octave C3–C4) and the fretboard are locked together.
+Below, the keyboard (showing one octave [[C3]]–[[C4]]) and the fretboard are locked together.
 Play any note on either instrument — both will respond.
 
-The coloured dots on the neck are the eight C major scale notes; the number inside each
+The coloured dots on the neck are the eight [[C]] major scale notes; the number inside each
 dot is the scale degree. The lines connecting consecutive degrees are labelled **W** (whole
 step, two frets) or **H** (half step, one fret).
 
@@ -157,7 +157,7 @@ step, two frets) or **H** (half step, one fret).
 :::
 
 :::callout key
-The path crosses three strings — A, D, and G — in groups of **2 – 3 – 3** notes.
+The path crosses three strings — [[A]], [[D]], and [[G]] — in groups of **2 – 3 – 3** notes.
 Each time the path jumps from one string to the next, the fret number drops by three.
 That three-fret shift is exactly what a whole step looks like when you move across two
 strings that are a perfect fourth (five semitones) apart:
@@ -167,22 +167,22 @@ The half steps (**[[E]]–[[F]]** at degrees 3–4 and **[[B]]–[[C]]** at degr
 are the only adjacent pairs one fret apart — every other pair is two frets.
 :::
 
-## Phase 9 — G major on the neck
+## Phase 9 — [[G]] major on the neck
 
-G major has one sharp: [[F♯]]. On the keyboard it is the black key between F and G.
-On the guitar it is the note **one fret higher than F natural** wherever F appears — fret
+[[G]] major has one sharp: [[F#]]. On the keyboard it is the black key between [[F]] and [[G]].
+On the guitar it is the note **one fret higher than [[F]] natural** wherever [[F]] appears — fret
 position shifts up by one.
 
-The diagram below starts from [[G2]] on the low-E string (fret 3) and follows the same
-2 – 3 – 3 path across the E, A, and D strings. Compare the W/H pattern to C major above:
+The diagram below starts from [[G2]] on the low-[[E2]] string (fret 3) and follows the same
+2 – 3 – 3 path across the [[E]], [[A]], and [[D]] strings. Compare the W/H pattern to C major above:
 everything is identical **except degree 7**, where the H label has moved one fret higher
-because F natural became F♯.
+because F natural became [[F#]].
 
 :::widget keyview {root: "G2", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
 :::
 
 :::callout info
 The shape of a major scale on the guitar is the same in every key — only the **starting
-fret** moves. Shift the entire C major pattern up two frets and you get D major; up four
-frets gives E major. The W–W–H–W–W–W–H rule (2–2–1–2–2–2–1 frets) never changes.
+fret** moves. Shift the entire [[C]] major pattern up two frets and you get [[D]] major; up four
+frets gives [[E]] major. The W–W–H–W–W–W–H rule (2–2–1–2–2–2–1 frets) never changes.
 :::
