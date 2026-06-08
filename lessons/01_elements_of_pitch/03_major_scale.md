@@ -142,37 +142,47 @@ the logic of scale degrees breaks down if you substitute enharmonic spellings.
 
 ## Phase 8 — C major on the neck
 
-You now know C major as a pattern of white keys and a rule: **W – W – H – W – W – W – H**.
-On the guitar that pattern translates directly into fret distances: a **whole step** is always
-**two frets**, a **half step** is always **one fret**.
+You now know C major as a pattern of white keys and the rule **W – W – H – W – W – W – H**.
+On the guitar that rule becomes fret distances: a **whole step** is always **two frets**;
+a **half step** is always **one fret**.
 
-Below the keyboard and fretboard show C major together. Play any note on either — both instruments
-light up at once.
+Below, the keyboard (showing one octave C3–C4) and the fretboard are locked together.
+Play any note on either instrument — both will respond.
 
-:::widget keyview {root: "C4", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
+The coloured dots on the neck are the eight C major scale notes; the number inside each
+dot is the scale degree. The lines connecting consecutive degrees are labelled **W** (whole
+step, two frets) or **H** (half step, one fret).
+
+:::widget keyview {root: "C3", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
 :::
 
 :::callout key
-Every **coloured dot** on the neck is a C major scale note — the number inside is its scale degree.
-Look at degrees **3→4** ([[E]]–[[F]]) and **7→8** ([[B]]–[[C]]) on the neck:
-those two pairs are only **one fret apart**. Every other adjacent pair is **two frets apart**.
-That is the same W–W–H–W–W–W–H pattern, written in frets.
+The path crosses three strings — A, D, and G — in groups of **2 – 3 – 3** notes.
+Each time the path jumps from one string to the next, the fret number drops by three.
+That three-fret shift is exactly what a whole step looks like when you move across two
+strings that are a perfect fourth (five semitones) apart:
+five semitones of string gap minus two semitones of scale step = three frets backward.
+
+The half steps (**[[E]]–[[F]]** at degrees 3–4 and **[[B]]–[[C]]** at degrees 7–8)
+are the only adjacent pairs one fret apart — every other pair is two frets.
 :::
 
 ## Phase 9 — G major on the neck
 
-G major has one sharp: [[F♯]]. On the keyboard it was the black key between F and G.
-On the guitar it is simply the note **one fret higher than F natural** — wherever F appears,
-sharpen it by sliding up one fret and you have F♯.
+G major has one sharp: [[F♯]]. On the keyboard it is the black key between F and G.
+On the guitar it is the note **one fret higher than F natural** wherever F appears — fret
+position shifts up by one.
 
-Compare the two necks below against the C major neck above. Every degree occupies the same
-relative shape **except degree 7**: F natural (one fret) has become F♯ (two frets).
+The diagram below starts from [[G2]] on the low-E string (fret 3) and follows the same
+2 – 3 – 3 path across the E, A, and D strings. Compare the W/H pattern to C major above:
+everything is identical **except degree 7**, where the H label has moved one fret higher
+because F natural became F♯.
 
-:::widget keyview {root: "G4", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
+:::widget keyview {root: "G2", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
 :::
 
 :::callout info
-The fretboard shape of a major scale is the same for every key — only its **starting fret** shifts.
-Move the C major pattern up two frets and you get D major; up four frets gives E major.
-The W–W–H–W–W–W–H rule and its 2–2–1–2–2–2–1 fret translation never change.
+The shape of a major scale on the guitar is the same in every key — only the **starting
+fret** moves. Shift the entire C major pattern up two frets and you get D major; up four
+frets gives E major. The W–W–H–W–W–W–H rule (2–2–1–2–2–2–1 frets) never changes.
 :::

@@ -94,6 +94,19 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
+/* flashMidi: brief glow when a note is played on the paired keyboard */
+.mf-cell--flash::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
 
 /* Colored shape chip — same standard as the keyboard / dots elsewhere. */
 .mf-dot {
