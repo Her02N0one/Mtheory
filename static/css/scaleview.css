@@ -70,6 +70,11 @@
   position: relative; /* hosts the .mkv-fb-path SVG overlay */
 }
 
+/* Taller string rows so the W/H interval lines have breathing room. */
+.mkv-fb .mf-row {
+  height: 52px;
+}
+
 /* Scale-path overlay: SVG drawn on top of the fretboard grid showing
    W/H labels between consecutive scale degrees. */
 .mkv-fb-path {
