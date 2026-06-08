@@ -43,6 +43,9 @@
         ? opts.strings.slice() : [0, 1, 2, 3, 4, 5];
       this.frets = opts.frets != null ? opts.frets : 5;
       this.labels = opts.labels || "marks";
+      // labelMap: {midi -> string} — overrides the text shown inside a dot.
+      // Useful for degree numbers (1–8) instead of note names (C, D, E…).
+      this.labelMap = opts.labelMap || {};
       this.onEvent = typeof opts.onEvent === "function" ? opts.onEvent : null;
       this.emitDom = opts.emitDom !== false;
 
@@ -158,7 +161,7 @@
           (isHi ? " mf-dot--hi" : "") + (isRef ? " mf-dot--ref" : "");
         dot.style.background = style.color;
         dot.style.color = k.readableText(style.color);
-        dot.textContent = name;
+        dot.textContent = this.labelMap[midi] != null ? String(this.labelMap[midi]) : name;
         cell.appendChild(dot);
       }
 

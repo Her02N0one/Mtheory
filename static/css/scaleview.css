@@ -62,6 +62,15 @@
 }
 
 /* =========================================================================
+   KeyView fretboard extension (mkv-fb)
+   The optional guitar neck mounted below the keyboard overlay.
+   ========================================================================= */
+.mkv-fb {
+  margin-top: 16px;
+  /* Inherit the card background so the fretboard sits inside the same tile */
+}
+
+/* =========================================================================
    ChromaCircle (mcc-*) — Circular pitch visualisation
    ========================================================================= */
 .mcc-wrap {

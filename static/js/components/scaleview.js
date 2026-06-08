@@ -232,12 +232,12 @@
           
           // Draw the triangle lines coming from the keys to the midpoint
           // Assuming keyboard keys are around Y=110 (adjust based on your layout)
-          const bracketTop = Y_STEPS - 15; 
-          parent.appendChild(svg("line", { class: "msv-tri", x1: x1, y1: 110, x2: xM, y2: bracketTop }));
-          parent.appendChild(svg("line", { class: "msv-tri", x1: x2, y1: 110, x2: xM, y2: bracketTop }));
+          const bracketTop = Y_STEPS - 15;
+          el.appendChild(svg("line", { class: "msv-tri", x1: x1, y1: 110, x2: xM, y2: bracketTop }));
+          el.appendChild(svg("line", { class: "msv-tri", x1: x2, y1: 110, x2: xM, y2: bracketTop }));
 
           // Draw the W/H bracket
-          this._renderStep(parent, m1, m2, x1, x2, bracketTop);
+          this._renderStep(el, m1, m2, x1, x2, bracketTop);
         }
       }
 
@@ -499,6 +499,69 @@
       if (!this._overlayHost.children.length) {
         requestAnimationFrame(() => requestAnimationFrame(() => this._drawOverlay()));
       }
+
+      // Optional fretboard view below the keyboard overlay.
+      if (opts.fretboard && global.MtheoryFretboard) {
+        this._fbOpts = opts;
+        requestAnimationFrame(() => this._buildFretboard());
+      }
+    }
+
+    _buildFretboard() {
+      const KBc = global.MtheoryKeyboard;
+      const FB  = global.MtheoryFretboard;
+      if (!FB || !KBc) return;
+
+      const degs  = this._degs;
+      const frets = this._fbOpts.frets != null ? this._fbOpts.frets : 7;
+
+      // Build degree label map: exact MIDI in the scale → degree number.
+      const labelMap = {};
+      degs.forEach(function (d, i) { labelMap[d.midi] = String(i + 1); });
+
+      // Highlight by note name (pitch class) so every position of each scale
+      // note lights up on the neck, not just the octave shown on the keyboard.
+      const highlightNames = degs.map(function (d) { return d.name; });
+
+      const fbHost = document.createElement("div");
+      fbHost.className = "mkv-fb";
+      this.root.appendChild(fbHost);
+
+      this._fb = new FB(fbHost, {
+        frets:    frets,
+        highlight: highlightNames,
+        labels:   "marks",
+        labelMap: labelMap,
+        audio:    this._fbOpts.audio !== false,
+      });
+
+      // Snapshot full scale MIDI set so we can restore it after a single-note flash.
+      this._fbScaleMidis     = new Set(this._fb.highlightMidi);
+      this._kbScaleHighlight = degs.map(function (d) { return KBc.sciOf(d.midi); });
+
+      const self = this;
+
+      // Keyboard → fretboard: flash the exact played pitch, then restore all.
+      this.root.addEventListener("mtheory:note_played", function (ev) {
+        const p = ev.detail && ev.detail.payload;
+        if (!p || p.midi == null || !self._fb) return;
+        self._fb.setHighlightMidi(new Set([p.midi]));
+        clearTimeout(self._fbTimer);
+        self._fbTimer = setTimeout(function () {
+          self._fb.setHighlightMidi(self._fbScaleMidis);
+        }, 900);
+      });
+
+      // Fretboard → keyboard: flash the played note on the keyboard, then restore.
+      this.root.addEventListener("mtheory:fret_played", function (ev) {
+        const p = ev.detail && ev.detail.payload;
+        if (!p || p.midi == null || !self._kb) return;
+        self._kb.setHighlight(KBc.sciOf(p.midi));
+        clearTimeout(self._kbTimer);
+        self._kbTimer = setTimeout(function () {
+          self._kb.setHighlight(self._kbScaleHighlight);
+        }, 900);
+      });
     }
 
     _drawOverlay() {
@@ -640,7 +703,10 @@
     }
 
     destroy() {
+      clearTimeout(this._fbTimer);
+      clearTimeout(this._kbTimer);
       if (this._kb && this._kb.destroy) this._kb.destroy();
+      if (this._fb && this._fb.destroy) this._fb.destroy();
       this.root.innerHTML = "";
     }
   }

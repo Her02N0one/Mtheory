@@ -843,33 +843,55 @@
     el.appendChild(circleHost);
     el.appendChild(kbWrap);
 
-    const type  = props.type || "half";
-    // Keyboard always spans C4-C5.
-    const C4 = KBc.midiOfSci("C4"), C5 = KBc.midiOfSci("C5");
+    const defaultType = props.type || "half";
 
-    // Build all white-key pairs of the requested type within C4-C5.
-    // White key MIDI values in order C D E F G A B C (inclusive).
-    const WHITE_PCS = [0, 2, 4, 5, 7, 9, 11];
-    const whites = [];
-    for (let m = C4; m <= C5; m++) {
-      if (WHITE_PCS.indexOf(KBc.pitchClassOf(m)) !== -1) whites.push(m);
-    }
+    // ---- Build the pairs list --------------------------------------------
+    // Three modes:
+    //  1. `steps: [{from, type}, …]`  — explicit named pairs (lesson DSL array)
+    //  2. `from: "C4", type: "whole"` — single explicit pair
+    //  3. (default) all white-key pairs of `type` in C4–C5
     const pairs = []; // [{from, to, diff}]
-    for (let i = 0; i < whites.length - 1; i++) {
-      const diff = whites[i + 1] - whites[i]; // 1 = half, 2 = whole
-      const isHalf = diff === 1;
-      if ((type === "half" && isHalf) || (type === "whole" && !isHalf)) {
-        pairs.push({ from: whites[i], to: whites[i + 1], diff });
+
+    if (Array.isArray(props.steps) && props.steps.length) {
+      props.steps.forEach(function (s) {
+        const m = KBc.midiOfSci(String(s.from));
+        if (m == null) return;
+        const diff = (s.type === "whole") ? 2 : 1;
+        pairs.push({ from: m, to: m + diff, diff: diff });
+      });
+    } else if (props.from) {
+      const m = KBc.midiOfSci(String(props.from));
+      if (m != null) {
+        const diff = defaultType === "whole" ? 2 : 1;
+        pairs.push({ from: m, to: m + diff, diff: diff });
+      }
+    } else {
+      // Default: all white-key pairs of the given type in C4-C5.
+      const C4 = KBc.midiOfSci("C4"), C5 = KBc.midiOfSci("C5");
+      const WHITE_PCS = [0, 2, 4, 5, 7, 9, 11];
+      const whites = [];
+      for (let m = C4; m <= C5; m++) {
+        if (WHITE_PCS.indexOf(KBc.pitchClassOf(m)) !== -1) whites.push(m);
+      }
+      for (let i = 0; i < whites.length - 1; i++) {
+        const diff = whites[i + 1] - whites[i];
+        const isHalf = diff === 1;
+        if ((defaultType === "half" && isHalf) || (defaultType === "whole" && !isHalf)) {
+          pairs.push({ from: whites[i], to: whites[i + 1], diff: diff });
+        }
       }
     }
 
     // All highlighted notes = union of all pair endpoints.
-    const hiMidis = [...new Set(pairs.flatMap(p => [p.from, p.to]))];
+    const hiMidis = [].concat.apply([], pairs.map(function (p) { return [p.from, p.to]; }));
+    const hiMidiUniq = hiMidis.filter(function (v, i, a) { return a.indexOf(v) === i; });
 
-    // Chromatic circle: pass all pairs as `steps` array.
+    // Chromatic circle: each pair becomes a step arc.
     const circle = new global.MtheoryChromaCircle(circleHost, {
-      steps: pairs.map(p => ({ from: KBc.nameOf(p.from), type: type })),
-      highlight: hiMidis.map(m => KBc.nameOf(m)),
+      steps: pairs.map(function (p) {
+        return { from: KBc.nameOf(p.from), type: p.diff === 1 ? "half" : "whole" };
+      }),
+      highlight: hiMidiUniq.map(function (m) { return KBc.nameOf(m); }),
       labels: "names",
       interactive: true,
     });
@@ -877,13 +899,11 @@
     // Keyboard spanning C4-C5.
     const kb = new KBc(kbHost, {
       low: "C4", high: "C5",
-      highlight: hiMidis.map(m => KBc.sciOf(m)),
+      highlight: hiMidiUniq.map(function (m) { return KBc.sciOf(m); }),
       labels: "naturals",
     });
 
     // --- Bracket overlay ---------------------------------------------------
-    // After the keyboard renders, measure white-key positions and draw SVG
-    // bracket lines: from each pair of keys down to a V-shape with a label.
     const SVGNS = "http://www.w3.org/2000/svg";
     function mksvg(tag, attrs) {
       const e = document.createElementNS(SVGNS, tag);
@@ -891,20 +911,17 @@
       return e;
     }
 
-    const label = type === "half" ? "½ step" : "1 step";
-    const bracketH = 44; // height of SVG overlay below keys
-    const TIP_Y = 24;    // y of the V-tip
-    const TEXT_Y = 38;   // y of the label text
+    const bracketH = 44;
+    const TIP_Y   = 24;
+    const TEXT_Y  = 38;
 
     function drawBrackets() {
-      // Remove any old overlay.
       const old = kbWrap.querySelector(".mte-stepview__brackets");
       if (old) old.remove();
 
-      const kbEl = kbHost.querySelector(".mk-keyboard") || kbHost;
+      const kbEl   = kbHost.querySelector(".mk-keyboard") || kbHost;
       const kbRect = kbEl.getBoundingClientRect();
-      const wrapRect = kbWrap.getBoundingClientRect();
-      if (!kbRect.width) return; // not yet laid out
+      if (!kbRect.width) return;
 
       const svgW = kbRect.width;
       const bracketSvg = mksvg("svg", {
@@ -914,56 +931,51 @@
         style: "display:block;overflow:visible;",
       });
 
-      pairs.forEach(({ from, to }) => {
-        // Find key elements by midi.
+      pairs.forEach(function ({ from, to, diff }) {
         const k1El = kbHost.querySelector('[data-midi="' + from + '"]');
-        const k2El = kbHost.querySelector('[data-midi="' + to + '"]');
+        const k2El = kbHost.querySelector('[data-midi="' + to   + '"]');
         if (!k1El || !k2El) return;
 
-        const r1 = k1El.getBoundingClientRect();
-        const r2 = k2El.getBoundingClientRect();
-        // X centre of each key, relative to the kbEl left edge.
-        const x1 = r1.left + r1.width / 2 - kbRect.left;
-        const x2 = r2.left + r2.width / 2 - kbRect.left;
-        const xM = (x1 + x2) / 2;
+        const r1  = k1El.getBoundingClientRect();
+        const r2  = k2El.getBoundingClientRect();
+        const x1  = r1.left + r1.width / 2 - kbRect.left;
+        const x2  = r2.left + r2.width / 2 - kbRect.left;
+        const xM  = (x1 + x2) / 2;
 
-        // Colour: use the accent colour for whole steps, warn for half steps.
-        const col = type === "half" ? "var(--warn,#ffb700)" : "var(--accent,#5555ff)";
+        // Per-pair colour and label.
+        const isHalfPair  = diff === 1;
+        const col         = isHalfPair ? "var(--warn,#ffb700)" : "var(--accent,#5555ff)";
+        const pairLabel   = isHalfPair ? "½ step" : "1 step";
 
-        // Left leg: x1,0 -> xM,TIP_Y
         bracketSvg.appendChild(mksvg("line", {
-          class: "mte-bracket-line", x1, y1: 2, x2: xM, y2: TIP_Y,
+          class: "mte-bracket-line", x1: x1, y1: 2, x2: xM, y2: TIP_Y,
           stroke: col, "stroke-width": "1.5", "stroke-linecap": "round",
         }));
-        // Right leg: x2,0 -> xM,TIP_Y
         bracketSvg.appendChild(mksvg("line", {
           class: "mte-bracket-line", x1: x2, y1: 2, x2: xM, y2: TIP_Y,
           stroke: col, "stroke-width": "1.5", "stroke-linecap": "round",
         }));
-        // Vertical stem down.
         bracketSvg.appendChild(mksvg("line", {
           class: "mte-bracket-stem", x1: xM, y1: TIP_Y, x2: xM, y2: TEXT_Y - 4,
           stroke: col, "stroke-width": "1.5",
         }));
-        // Label.
         const t = mksvg("text", {
           class: "mte-bracket-label",
           x: xM, y: TEXT_Y + 4,
           "text-anchor": "middle", "dominant-baseline": "alphabetic",
           fill: col,
         });
-        t.textContent = label;
+        t.textContent = pairLabel;
         bracketSvg.appendChild(t);
       });
 
       kbWrap.appendChild(bracketSvg);
     }
 
-    // Draw once layout is stable.
-    requestAnimationFrame(() => requestAnimationFrame(drawBrackets));
+    requestAnimationFrame(function () { requestAnimationFrame(drawBrackets); });
 
     // Sync: note_played from either highlights both.
-    el.addEventListener("mtheory:note_played", (ev) => {
+    el.addEventListener("mtheory:note_played", function (ev) {
       const p = ev.detail && ev.detail.payload;
       if (!p || p.midi == null) return;
       const src = ev.detail.source;
@@ -972,7 +984,7 @@
     });
 
     return { keyboard: kb, circle: circle,
-      destroy() { kb.destroy(); circle.destroy(); } };
+      destroy: function () { kb.destroy(); circle.destroy(); } };
   });
 
   // Grand staff — treble + bass clef in one widget.  Both staves are

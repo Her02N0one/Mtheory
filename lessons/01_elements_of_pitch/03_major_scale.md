@@ -139,3 +139,40 @@ once. If you need to raise the 7th degree of G major, the note must be spelled
 F♯ (raising F), not G♭ (lowering G). The music looks different on the staff and
 the logic of scale degrees breaks down if you substitute enharmonic spellings.
 :::
+
+## Phase 8 — C major on the neck
+
+You now know C major as a pattern of white keys and a rule: **W – W – H – W – W – W – H**.
+On the guitar that pattern translates directly into fret distances: a **whole step** is always
+**two frets**, a **half step** is always **one fret**.
+
+Below the keyboard and fretboard show C major together. Play any note on either — both instruments
+light up at once.
+
+:::widget keyview {root: "C4", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
+:::
+
+:::callout key
+Every **coloured dot** on the neck is a C major scale note — the number inside is its scale degree.
+Look at degrees **3→4** ([[E]]–[[F]]) and **7→8** ([[B]]–[[C]]) on the neck:
+those two pairs are only **one fret apart**. Every other adjacent pair is **two frets apart**.
+That is the same W–W–H–W–W–W–H pattern, written in frets.
+:::
+
+## Phase 9 — G major on the neck
+
+G major has one sharp: [[F♯]]. On the keyboard it was the black key between F and G.
+On the guitar it is simply the note **one fret higher than F natural** — wherever F appears,
+sharpen it by sliding up one fret and you have F♯.
+
+Compare the two necks below against the C major neck above. Every degree occupies the same
+relative shape **except degree 7**: F natural (one fret) has become F♯ (two frets).
+
+:::widget keyview {root: "G4", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
+:::
+
+:::callout info
+The fretboard shape of a major scale is the same for every key — only its **starting fret** shifts.
+Move the C major pattern up two frets and you get D major; up four frets gives E major.
+The W–W–H–W–W–W–H rule and its 2–2–1–2–2–2–1 fret translation never change.
+:::
