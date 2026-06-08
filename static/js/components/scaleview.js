@@ -515,44 +515,41 @@
       const degs  = this._degs;
       const frets = this._fbOpts.frets != null ? this._fbOpts.frets : 7;
 
-      // Build degree label map: exact MIDI in the scale → degree number.
+      // Degree label map: exact MIDI in the scale → degree number string.
       const labelMap = {};
       degs.forEach(function (d, i) { labelMap[d.midi] = String(i + 1); });
 
-      // Highlight by note name (pitch class) so every position of each scale
-      // note lights up on the neck, not just the octave shown on the keyboard.
+      // Highlight by note name (pitch-class) so every occurrence of each scale
+      // note lights up on the neck, not just the one octave shown on the keyboard.
       const highlightNames = degs.map(function (d) { return d.name; });
 
       const fbHost = document.createElement("div");
       fbHost.className = "mkv-fb";
+      fbHost.style.position = "relative"; // needed for the path SVG overlay
       this.root.appendChild(fbHost);
+      this._fbHost = fbHost;
 
       this._fb = new FB(fbHost, {
-        frets:    frets,
+        frets:     frets,
         highlight: highlightNames,
-        labels:   "marks",
-        labelMap: labelMap,
-        audio:    this._fbOpts.audio !== false,
+        labels:    "marks",
+        labelMap:  labelMap,
+        audio:     this._fbOpts.audio !== false,
       });
 
-      // Snapshot full scale MIDI set so we can restore it after a single-note flash.
-      this._fbScaleMidis     = new Set(this._fb.highlightMidi);
       this._kbScaleHighlight = degs.map(function (d) { return KBc.sciOf(d.midi); });
 
       const self = this;
 
-      // Keyboard → fretboard: flash the exact played pitch, then restore all.
+      // Keyboard → fretboard: flash the played MIDI without re-rendering the
+      // fretboard (which would destroy the path SVG overlay).
       this.root.addEventListener("mtheory:note_played", function (ev) {
         const p = ev.detail && ev.detail.payload;
         if (!p || p.midi == null || !self._fb) return;
-        self._fb.setHighlightMidi(new Set([p.midi]));
-        clearTimeout(self._fbTimer);
-        self._fbTimer = setTimeout(function () {
-          self._fb.setHighlightMidi(self._fbScaleMidis);
-        }, 900);
+        self._fb.flashMidi(new Set([p.midi]), 900);
       });
 
-      // Fretboard → keyboard: flash the played note on the keyboard, then restore.
+      // Fretboard → keyboard: highlight the played key, then restore.
       this.root.addEventListener("mtheory:fret_played", function (ev) {
         const p = ev.detail && ev.detail.payload;
         if (!p || p.midi == null || !self._kb) return;
@@ -562,6 +559,131 @@
           self._kb.setHighlight(self._kbScaleHighlight);
         }, 900);
       });
+
+      // Compute the standard ascending scale path and draw the interval overlay.
+      const openMidi = [0, 1, 2, 3, 4, 5].map(function (s) { return FB.midiAt(s, 0); });
+      const scaleMidis = degs.map(function (d) { return d.midi; });
+      this._scalePath = this._buildScalePath(scaleMidis, openMidi, frets);
+      if (this._scalePath.length >= 2) {
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { self._drawPathOverlay(); });
+        });
+      }
+    }
+
+    // Build the natural ascending fingering path for the scale.
+    // Stays on a string while the fret number stays within 3 semitones of the
+    // first fret played on that string, then shifts to the next higher string.
+    _buildScalePath(scaleMidis, openMidi, maxFret) {
+      const path   = [];
+      let s        = -1;
+      let firstF   = null;
+
+      // Find the lowest string where the first note sits within range.
+      const root = scaleMidis[0];
+      for (let i = 0; i <= 5; i++) {
+        const f = root - openMidi[i];
+        if (f >= 0 && f <= maxFret) { s = i; break; }
+      }
+      if (s === -1) return path;
+
+      for (let n = 0; n < scaleMidis.length; n++) {
+        const midi = scaleMidis[n];
+        const f    = midi - openMidi[s];
+        const ok   = f >= 0 && f <= maxFret && (firstF === null || f <= firstF + 3);
+
+        if (ok) {
+          if (firstF === null) firstF = f;
+          path.push({ string: s, fret: f, midi: midi });
+        } else {
+          // Shift to the next higher string.
+          s++;
+          if (s > 5) break;
+          const f2 = midi - openMidi[s];
+          if (f2 >= 0 && f2 <= maxFret) {
+            firstF = f2;
+            path.push({ string: s, fret: f2, midi: midi });
+          }
+        }
+      }
+      return path;
+    }
+
+    // Draw an SVG overlay on top of the fretboard showing the scale path with
+    // W / H labels between consecutive notes (same-string and cross-string).
+    _drawPathOverlay() {
+      if (!this._scalePath || !this._scalePath.length || !this._fbHost) return;
+
+      const SVGNS = "http://www.w3.org/2000/svg";
+      function mk(tag, a) {
+        const e = document.createElementNS(SVGNS, tag);
+        if (a) for (const k in a) e.setAttribute(k, a[k]);
+        return e;
+      }
+
+      const fbRoot    = this._fb.root;
+      const hostRect  = this._fbHost.getBoundingClientRect();
+      if (!hostRect.width) return;
+
+      // Collect cell centres relative to fbHost.
+      const pts = this._scalePath.map(function (step) {
+        const cell = fbRoot.querySelector(
+          '[data-string="' + step.string + '"][data-fret="' + step.fret + '"]'
+        );
+        if (!cell) return null;
+        const r = cell.getBoundingClientRect();
+        return {
+          x:    r.left + r.width  / 2 - hostRect.left,
+          y:    r.top  + r.height / 2 - hostRect.top,
+          midi: step.midi,
+        };
+      }).filter(Boolean);
+
+      if (pts.length < 2) return;
+
+      // Remove any existing overlay.
+      const old = this._fbHost.querySelector(".mkv-fb-path");
+      if (old) old.remove();
+
+      const svgEl = mk("svg", {
+        class:    "mkv-fb-path",
+        viewBox:  "0 0 " + hostRect.width + " " + hostRect.height,
+        width:    hostRect.width,
+        height:   hostRect.height,
+        style:    "position:absolute;top:0;left:0;pointer-events:none;overflow:visible",
+      });
+
+      for (let i = 0; i < pts.length - 1; i++) {
+        const p1    = pts[i];
+        const p2    = pts[i + 1];
+        const diff  = p2.midi - p1.midi;
+        const isH   = diff === 1;
+        const col   = isH ? "var(--warn,#ffb700)" : "var(--accent,#5555ff)";
+        const label = isH ? "H" : "W";
+        const mx    = (p1.x + p2.x) / 2;
+        const my    = (p1.y + p2.y) / 2;
+
+        // Connecting line.
+        svgEl.appendChild(mk("line", {
+          x1: p1.x, y1: p1.y, x2: p2.x, y2: p2.y,
+          stroke: col, "stroke-width": "2", "stroke-linecap": "round",
+          opacity: "0.75",
+        }));
+
+        // Label badge (circle + letter).
+        svgEl.appendChild(mk("circle", {
+          cx: mx, cy: my, r: 9,
+          fill: col, opacity: "0.92",
+        }));
+        const t = mk("text", {
+          x: mx, y: my, "text-anchor": "middle", "dominant-baseline": "central",
+          fill: "#fff", "font-size": "10", "font-weight": "bold",
+        });
+        t.textContent = label;
+        svgEl.appendChild(t);
+      }
+
+      this._fbHost.appendChild(svgEl);
     }
 
     _drawOverlay() {

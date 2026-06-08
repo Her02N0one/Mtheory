@@ -67,7 +67,17 @@
    ========================================================================= */
 .mkv-fb {
   margin-top: 16px;
-  /* Inherit the card background so the fretboard sits inside the same tile */
+  position: relative; /* hosts the .mkv-fb-path SVG overlay */
+}
+
+/* Scale-path overlay: SVG drawn on top of the fretboard grid showing
+   W/H labels between consecutive scale degrees. */
+.mkv-fb-path {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
 }
 
 /* =========================================================================

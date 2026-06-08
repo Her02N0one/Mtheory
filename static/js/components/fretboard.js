@@ -290,6 +290,21 @@
       setTimeout(() => el.classList.remove(cls), 600);
     }
 
+    // Briefly highlight all cells in `midiSet` without triggering a full
+    // re-render (so an SVG overlay drawn on top is not destroyed).
+    flashMidi(midiSet, duration) {
+      var ms = midiSet instanceof Set ? midiSet : new Set(midiSet || []);
+      var dur = duration != null ? duration : 900;
+      this._cellEls.forEach(function (el, key) {
+        var parts = key.split(":");
+        var m = midiAt(parseInt(parts[0], 10), parseInt(parts[1], 10));
+        if (ms.has(m)) {
+          el.classList.add("mf-cell--flash");
+          setTimeout(function () { el.classList.remove("mf-cell--flash"); }, dur);
+        }
+      });
+    }
+
     destroy() { this.root.innerHTML = ""; this._cellEls.clear(); }
   }
 
