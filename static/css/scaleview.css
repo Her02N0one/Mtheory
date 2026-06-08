@@ -70,6 +70,10 @@
   position: relative; /* hosts the .mkv-fb-path SVG overlay */
 }
 
+.mkv-fb .mf-row {
+    height: 52px;
+}
+
 /* Scale-path overlay: SVG drawn on top of the fretboard grid showing
    W/H labels between consecutive scale degrees. */
 .mkv-fb-path {
