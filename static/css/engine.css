@@ -1,0 +1,170 @@
+/* engine.css — Content Engine lesson layout (rendered by engine.js)
+ * Built for the app's dark theme (see styles.css :root). All blocks use light
+ * text on dark/translucent fills so prose stays readable. */
+
+.mte-lesson {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+  color: var(--text, #e8e8f0);
+}
+
+.mte-md h1 { font-size: 24px; margin: 0 0 12px; color: var(--text, #e8e8f0); }
+.mte-md h2 { font-size: 19px; margin: 22px 0 8px; color: var(--text, #e8e8f0); }
+.mte-md h3 { font-size: 16px; margin: 18px 0 6px; color: var(--text, #e8e8f0); }
+.mte-md p  { line-height: 1.6; margin: 8px 0; color: var(--text, #e8e8f0); }
+.mte-md strong { color: #fff; }
+
+.mte-widget { margin: 24px 0; }
+
+.mte-when {
+  border-left: 3px solid var(--success, #00ba35);
+  padding-left: 16px;
+  margin-top: 20px;
+}
+
+/* Callouts: dark translucent panel + colored accent. Readable on dark bg. */
+.mte-callout {
+  border-radius: var(--radius, 8px);
+  padding: 12px 16px;
+  margin: 16px 0;
+  background: var(--bg-card, #1a1a2e);
+  border: 1px solid var(--border, #2a2a4a);
+  border-left-width: 4px;
+  color: var(--text, #e8e8f0);
+  line-height: 1.55;
+}
+.mte-callout p { margin: 4px 0; color: var(--text, #e8e8f0); }
+.mte-callout strong { color: #fff; }
+
+.mte-callout--info { border-left-color: var(--accent, #5555ff); }
+.mte-callout--key  {
+  border-left-color: var(--warn, #ffb700);
+  background: color-mix(in srgb, var(--warn, #ffb700) 10%, var(--bg-card, #1a1a2e));
+}
+.mte-callout--warn {
+  border-left-color: var(--error, #ee0043);
+  background: color-mix(in srgb, var(--error, #ee0043) 10%, var(--bg-card, #1a1a2e));
+}
+
+.mte-button {
+  background: var(--accent, #5555ff);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius, 8px);
+  padding: 9px 18px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+}
+.mte-button:hover { filter: brightness(1.12); }
+
+/* Inline note chip ([[C]], [[F#]], [[Bb]]) — same color/shape standard as the
+   keyboard/fretboard dots. Shape signalled by border-radius. */
+.mte-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  height: 1.5em;
+  padding: 0 0.35em;
+  margin: 0 1px;
+  font-size: 0.9em;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: -0.25em;
+}
+.mte-note--circle { border-radius: 999px; }
+.mte-note--square { border-radius: 4px; }
+
+/* Companion: keyboard stacked above its fretboard twin. */
+.mte-companion { margin: 24px 0; }
+.mte-companion__kb { margin-bottom: 14px; }
+.mte-companion__staff { margin-bottom: 14px; }
+
+/* Recall drill: target keyboard + answer fretboard. */
+.mte-recall {
+  margin: 20px 0;
+  padding: 16px;
+  background: var(--bg-card, #1a1a2e);
+  border: 1px solid var(--border, #2a2a4a);
+  border-radius: var(--radius-lg, 14px);
+}
+.mte-recall__prompt {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: var(--text, #e8e8f0);
+}
+.mte-recall > div:nth-of-type(1) { margin-bottom: 14px; } /* keyboard */
+
+/* Read drill: prompt staff above answer keyboard. */
+.mte-read {
+  margin: 20px 0;
+  padding: 16px;
+  background: var(--bg-card, #1a1a2e);
+  border: 1px solid var(--border, #2a2a4a);
+  border-radius: var(--radius-lg, 14px);
+}
+.mte-read__prompt {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: var(--text, #e8e8f0);
+}
+.mte-read > div:nth-of-type(1) { margin-bottom: 14px; } /* staff */
+
+/* Checkpoint progress bar. */
+.mte-checkpoint {
+  margin: 16px 0;
+  padding: 12px 16px;
+  border-radius: var(--radius, 8px);
+  background: var(--bg-card, #1a1a2e);
+  border: 1px solid var(--border, #2a2a4a);
+  border-left: 4px solid var(--accent, #5555ff);
+}
+.mte-checkpoint__tally {
+  font-weight: 600;
+  color: var(--text, #e8e8f0);
+}
+.mte-checkpoint--pass {
+  border-left-color: var(--success, #00ba35);
+  background: color-mix(in srgb, var(--success, #00ba35) 12%, var(--bg-card, #1a1a2e));
+}
+
+.mte-unhandled {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--muted, #7777aa);
+  background: var(--bg-card, #1a1a2e);
+  border: 1px dashed var(--border, #2a2a4a);
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin: 8px 0;
+}
+
+/* Markdown pipe tables. */
+.mte-md-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 14px;
+}
+.mte-md-table th,
+.mte-md-table td {
+  padding: 7px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border, #2a2a4a);
+  color: var(--text, #e8e8f0);
+}
+.mte-md-table thead th {
+  color: var(--muted, #7777aa);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.mte-md-table td:first-child {
+  font-size: 18px;
+  font-family: "Bravura", "Segoe UI Symbol", serif;
+  letter-spacing: .1em;
+}

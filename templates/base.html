@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Chromatic Fretboard Theory Trainer{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/styles.css?v=23">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <nav class="no-print">
+    <span class="nav-brand">M<em>theory</em></span>
+    <a href="/">Home</a>
+    <a href="/fretboard">Fretboard</a>
+    <a href="/learn">Learn</a>
+    <a href="/inspect">Inspect</a>
+    <a href="/trainer">Trainer</a>
+  </nav>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

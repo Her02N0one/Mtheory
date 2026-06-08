@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+{% block title %}Learn{% endblock %}
+
+{% block content %}
+<div class="page-learn">
+
+  <div class="learn-hero">
+    <h1 class="learn-title">The Masterclass Roadmap</h1>
+    <p class="learn-desc">
+      Five semesters, 43 lessons, built in order. Lessons that are <strong>live</strong> drop you
+      straight into a playable drill; <span class="lesson-planned-tag">Planned</span> lessons are
+      on the map but not built yet.
+    </p>
+    <a href="/trainer" class="btn-secondary btn-sm">→ Free Training</a>
+  </div>
+
+  {% for sem in semesters %}
+  <section class="semester-section" id="sem-{{ sem.id }}" data-sem="{{ sem.id }}">
+
+    <div class="semester-header" onclick="toggleSemester('{{ sem.id }}')"
+         role="button" aria-expanded="true" aria-controls="semlessons-{{ sem.id }}">
+      <div class="semester-header-top">
+        <span class="semester-num">{{ sem.num }}</span>
+        <div class="semester-header-text">
+          <h2 class="semester-title">{{ sem.title }}</h2>
+          <p class="semester-tagline">{{ sem.subtitle }}</p>
+        </div>
+        <span class="semester-progress" id="semprog-{{ sem.id }}"></span>
+        <span class="semester-chevron" id="chevron-{{ sem.id }}">▼</span>
+      </div>
+    </div>
+
+    <div class="semester-lessons" id="semlessons-{{ sem.id }}">
+      {% for lesson in sem.lessons %}
+        {% set is_live = lesson.stages | length > 0 %}
+        <div class="lesson-card {% if not is_live %}lesson-planned{% endif %}"
+             id="lesson-{{ lesson.num }}"
+             data-num="{{ lesson.num }}"
+             data-stages='{{ lesson.stages | tojson }}'>
+
+          <div class="lesson-rail">
+            <span class="lesson-num">{{ lesson.num }}</span>
+            <span class="lesson-status-icon" aria-hidden="true"></span>
+          </div>
+
+          <div class="lesson-body">
+            <div class="lesson-title-row">
+              <h3 class="lesson-title">{{ lesson.title }}</h3>
+              {% if not is_live %}
+                <span class="lesson-planned-tag">Planned</span>
+              {% endif %}
+            </div>
+
+            {% if lesson.summary %}
+              <p class="lesson-summary">{{ lesson.summary }}</p>
+            {% endif %}
+
+            {% if is_live %}
+              <div class="lesson-stages">
+                {% for sid in lesson.stages %}
+                  {% set s = stage_map[sid] %}
+                  <a class="lesson-stage-chip"
+                     href="/learn/{{ s.id }}"
+                     id="chip-{{ s.id }}"
+                     data-id="{{ s.id }}"
+                     data-requires='{{ s.requires | tojson }}'>
+                    <span class="lsc-dot" style="background:{{ s.color }}">{{ s.icon }}</span>
+                    <span class="lsc-title">{{ s.title }}</span>
+                    <span class="lsc-state" aria-hidden="true"></span>
+                  </a>
+                {% endfor %}
+              </div>
+              <div class="lesson-footer">
+                <div class="lesson-bar-wrap"><div class="lesson-bar-fill" style="width:0%"></div></div>
+                <span class="lesson-score-label"></span>
+              </div>
+            {% else %}
+              <p class="lesson-planned-desc">Not built as a drill yet — concept map only.</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  </section>
+  {% endfor %}
+
+  <div style="text-align:center; margin-top:2.5rem;">
+    <button class="btn-ghost btn-sm" onclick="resetProgress()">Reset all progress</button>
+  </div>
+
+</div>
+
+<script>
+const PROGRESS_KEY = 'mtheory-progress';
+
+function loadProgress() {
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function toggleSemester(semId) {
+  const lessons = document.getElementById('semlessons-' + semId);
+  const chevron = document.getElementById('chevron-' + semId);
+  const section = document.getElementById('sem-' + semId);
+  const isOpen  = !lessons.classList.contains('semester-collapsed');
+  lessons.classList.toggle('semester-collapsed', isOpen);
+  chevron.textContent = isOpen ? '▶' : '▼';
+  section.querySelector('.semester-header').setAttribute('aria-expanded', String(!isOpen));
+}
+
+// A stage is unlocked when every prerequisite has been passed (best_stars >= 1).
+function stageUnlocked(requires, prog) {
+  return requires.length === 0 ||
+         requires.every(r => (prog[r] || {}).best_stars >= 1);
+}
+function stagePassed(stageId, prog) {
+  return (prog[stageId] || {}).best_stars >= 1;
+}
+
+function renderMap() {
+  const prog = loadProgress();
+  let frontierSem = null;   // first semester with an available-but-incomplete live lesson
+
+  document.querySelectorAll('.lesson-card').forEach(card => {
+    const stages = JSON.parse(card.dataset.stages || '[]');
+    const statusIcon = card.querySelector('.lesson-status-icon');
+
+    if (stages.length === 0) {              // planned lesson
+      card.classList.add('lesson-locked');
+      statusIcon.textContent = '🔒';
+      return;
+    }
+
+    let passed = 0, anyUnlocked = false;
+    stages.forEach(sid => {
+      const chip     = card.querySelector('#chip-' + CSS.escape(sid));
+      const requires = JSON.parse(chip.dataset.requires || '[]');
+      const unlocked = stageUnlocked(requires, prog);
+      const done     = stagePassed(sid, prog);
+      if (unlocked) anyUnlocked = true;
+      if (done) passed++;
+      chip.classList.toggle('lsc-locked', !unlocked);
+      chip.classList.toggle('lsc-done', done);
+      chip.querySelector('.lsc-state').textContent = done ? '★' : (unlocked ? '' : '🔒');
+      if (!unlocked) chip.setAttribute('aria-disabled', 'true');
+      else           chip.removeAttribute('aria-disabled');
+    });
+
+    const total   = stages.length;
+    const allDone = passed === total;
+    card.classList.toggle('lesson-complete', allDone);
+    card.classList.toggle('lesson-active', anyUnlocked && !allDone);
+    card.classList.toggle('lesson-locked', !anyUnlocked);
+    statusIcon.textContent = allDone ? '✓' : (anyUnlocked ? '▸' : '🔒');
+
+    const pct = Math.round((passed / total) * 100);
+    card.querySelector('.lesson-bar-fill').style.width = pct + '%';
+    card.querySelector('.lesson-score-label').textContent =
+      allDone ? 'Complete' : (passed > 0 ? passed + ' / ' + total + ' done' : '');
+
+    if (anyUnlocked && !allDone && !frontierSem) {
+      frontierSem = card.closest('.semester-section').dataset.sem;
+    }
+  });
+
+  // Per-semester progress label.
+  document.querySelectorAll('.semester-section').forEach(sec => {
+    let live = 0, done = 0;
+    sec.querySelectorAll('.lesson-card').forEach(c => {
+      if ((JSON.parse(c.dataset.stages || '[]')).length > 0) {
+        live++;
+        if (c.classList.contains('lesson-complete')) done++;
+      }
+    });
+    const lbl = document.getElementById('semprog-' + sec.dataset.sem);
+    if (lbl) lbl.textContent = live ? done + '/' + live + ' live' : 'Planned';
+  });
+
+  // Expand only the frontier semester (or Semester 1 when there's no progress).
+  const openSem = frontierSem || 'sem1';
+  document.querySelectorAll('.semester-section').forEach(sec => {
+    const id      = sec.dataset.sem;
+    const lessons = document.getElementById('semlessons-' + id);
+    const chevron = document.getElementById('chevron-' + id);
+    const open    = id === openSem;
+    lessons.classList.toggle('semester-collapsed', !open);
+    chevron.textContent = open ? '▼' : '▶';
+    sec.querySelector('.semester-header').setAttribute('aria-expanded', String(open));
+  });
+}
+
+function resetProgress() {
+  if (!confirm('Reset all progress? This cannot be undone.')) return;
+  localStorage.removeItem(PROGRESS_KEY);
+  renderMap();
+}
+
+renderMap();
+</script>
+{% endblock %}

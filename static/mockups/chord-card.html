@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Chord Card Mockups</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0d0d1a; color: #e8e8f0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; padding: 2rem; }
+h2 { color: #7777aa; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.6rem; }
+.cards { display: flex; flex-direction: column; gap: 2.5rem; }
+.card-wrap { }
+.card {
+  background: #1a1a2e; border: 1px solid #2a2a4a; border-radius: 14px;
+  padding: 1.25rem 1.5rem; max-width: 900px;
+}
+
+/* ─── shared atoms ─── */
+.muted   { color: #7777aa; }
+.gold    { color: #c8a020; }
+.accent  { color: #5555ff; }
+.sq      { display: inline-block; border-radius: 3px; }
+.ci      { display: inline-block; border-radius: 50%; }
+.shape-E  { background: #f7dd00; }
+.shape-C  { background: #ee0043; }
+.shape-G  { background: #ff3c00; }
+
+/* ─── MODEL A: Three-column command view ─── */
+.a-grid {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0 1.5rem;
+  align-items: center;
+}
+.a-note-big { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.a-swatch { width: 56px; height: 56px; border-radius: 6px; cursor: pointer; transition: filter 0.1s; }
+.a-swatch:hover { filter: brightness(1.3); }
+.a-note-name { font-size: 2rem; font-weight: 800; line-height: 1; }
+.a-note-role { font-size: 0.75rem; color: #7777aa; margin-top: 0.1rem; }
+.a-mid { display: flex; flex-direction: column; gap: 0.5rem; }
+.a-chord-header { display: flex; align-items: baseline; gap: 0.5rem; }
+.a-chord-name { font-size: 1.6rem; font-weight: 800; color: #c8a020; line-height: 1; }
+.a-inversion  { font-size: 0.72rem; color: #7777aa; font-style: italic; align-self: flex-end; }
+.a-pills { display: flex; align-items: center; gap: 0; }
+.a-pill {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 8px 3px 5px; border-radius: 6px;
+  background: rgba(255,255,255,0.05); cursor: pointer;
+  transition: background 0.1s;
+}
+.a-pill:hover { background: rgba(255,255,255,0.13); }
+.a-pill.cur   { background: rgba(255,255,255,0.15); outline: 1px solid rgba(255,255,255,0.2); }
+.a-pill-dot   { width: 10px; height: 10px; }
+.a-pill-note  { font-size: 0.9rem; font-weight: 700; }
+.a-pill-deg   { font-size: 0.65rem; color: #7777aa; }
+.a-int { display: flex; flex-direction: column; align-items: center; padding: 0 6px; gap: 2px; }
+.a-int svg { display: block; }
+.a-int-lbl { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.04em; line-height: 1; }
+.a-formula { font-size: 0.78rem; color: #7777aa; }
+.a-steps { display: flex; gap: 4px; }
+.a-step { width: 8px; height: 8px; border-radius: 50%; background: #2a2a4a; }
+.a-step.done { background: #00dc50; }
+.a-step.cur  { background: #4d9fff; }
+.a-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; }
+.a-badge { font-size: 0.65rem; color: #7777aa; background: rgba(255,255,255,0.05); padding: 2px 7px; border-radius: 4px; }
+.a-rp { font-size: 0.72rem; display: flex; align-items: center; gap: 4px; }
+.a-rp-note { font-weight: 700; }
+.a-rp-int  { font-size: 0.6rem; font-weight: 700; }
+
+/* ─── MODEL B: Vertical stack, all context top-to-bottom ─── */
+.b-wrap { display: flex; gap: 1.5rem; align-items: flex-start; }
+.b-left { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; flex-shrink: 0; }
+.b-swatch { width: 60px; height: 60px; border-radius: 6px; cursor: pointer; }
+.b-swatch:hover { filter: brightness(1.3); }
+.b-note-name { font-size: 2.2rem; font-weight: 800; line-height: 1; }
+.b-steps { display: flex; gap: 5px; margin-top: 0.25rem; }
+.b-step { width: 22px; height: 4px; border-radius: 2px; background: #2a2a4a; }
+.b-step.done { background: #00dc50; }
+.b-step.cur  { background: #4d9fff; }
+.b-right { flex: 1; display: flex; flex-direction: column; gap: 0.55rem; }
+.b-chord-line { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+.b-chord-main { font-size: 1.5rem; font-weight: 800; color: #c8a020; }
+.b-chord-slash { font-size: 1.1rem; color: #7777aa; }
+.b-chord-inv   { font-size: 0.7rem; color: #7777aa; font-style: italic; }
+.b-chord-fb    { font-size: 0.85rem; color: #7777aa; vertical-align: super; }
+.b-deg-role    { font-size: 0.85rem; color: #e8e8f0; }
+.b-deg-qual    { color: #7777aa; font-size: 0.75rem; }
+.b-divider { height: 1px; background: #2a2a4a; }
+.b-voicing-row { display: flex; align-items: center; gap: 0; }
+.b-pill {
+  display: flex; align-items: center; gap: 4px;
+  padding: 3px 8px 3px 5px; border-radius: 6px;
+  background: rgba(255,255,255,0.04); cursor: pointer;
+}
+.b-pill:hover { background: rgba(255,255,255,0.1); }
+.b-pill.cur   { background: rgba(255,255,255,0.13); }
+.b-pill-dot { width: 10px; height: 10px; }
+.b-pill-note { font-size: 0.88rem; font-weight: 700; }
+.b-pill-deg  { font-size: 0.64rem; color: #7777aa; }
+.b-int { display: flex; flex-direction: column; align-items: center; padding: 0 5px; gap: 2px; cursor: default; }
+.b-int-lbl { font-size: 0.55rem; font-weight: 700; letter-spacing: 0.04em; }
+.b-sub { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.b-sub-item { font-size: 0.72rem; color: #7777aa; }
+.b-sub-item strong { color: #e8e8f0; font-weight: 700; }
+.b-voicing-badge { font-size: 0.65rem; padding: 1px 6px; border-radius: 3px; background: rgba(255,255,255,0.06); color: #7777aa; }
+
+/* ─── MODEL C: Piano-roll style horizontal note map ─── */
+.c-wrap { display: grid; grid-template-columns: auto 1fr; gap: 1.25rem; align-items: center; }
+.c-left { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.c-swatch { width: 52px; height: 52px; border-radius: 5px; cursor: pointer; }
+.c-note-name { font-size: 1.8rem; font-weight: 800; line-height: 1; }
+.c-role { font-size: 0.72rem; color: #7777aa; }
+.c-right { display: flex; flex-direction: column; gap: 0.6rem; }
+.c-header { display: flex; align-items: baseline; gap: 0.7rem; }
+.c-chord-name { font-size: 1.4rem; font-weight: 800; color: #c8a020; }
+.c-inv { font-size: 0.7rem; color: #7777aa; font-style: italic; }
+/* Horizontal register bar */
+.c-register { position: relative; height: 44px; background: rgba(255,255,255,0.03); border-radius: 6px; overflow: hidden; }
+.c-note-pin {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.c-pin-dot  { width: 12px; height: 12px; border-radius: 3px; }
+.c-pin-ci   { border-radius: 50%; }
+.c-pin-label { font-size: 0.6rem; font-weight: 700; white-space: nowrap; }
+.c-pin-deg   { font-size: 0.55rem; color: #7777aa; }
+/* interval arc labels */
+.c-span-lbl {
+  position: absolute; top: 4px; font-size: 0.55rem; font-weight: 700;
+  color: #7777aa;
+}
+.c-sub { display: flex; gap: 1rem; font-size: 0.72rem; color: #7777aa; flex-wrap: wrap; }
+.c-sub strong { color: #e8e8f0; }
+.c-steps { display: flex; gap: 4px; align-items: center; }
+.c-step { width: 18px; height: 3px; border-radius: 2px; background: #2a2a4a; }
+.c-step.done { background: #00dc50; }
+.c-step.cur  { background: #4d9fff; }
+
+/* ─── MODEL D: Minimal status line ─── */
+.d-wrap { display: flex; align-items: center; gap: 1.25rem; }
+.d-swatch { width: 48px; height: 48px; border-radius: 5px; flex-shrink: 0; cursor: pointer; }
+.d-center { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+.d-top { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.d-note { font-size: 2rem; font-weight: 800; line-height: 1; }
+.d-chord { font-size: 1.3rem; font-weight: 800; color: #c8a020; }
+.d-inv   { font-size: 0.7rem; color: #7777aa; font-style: italic; align-self: flex-end; }
+.d-bottom { display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem; color: #7777aa; flex-wrap: wrap; }
+.d-tag { background: rgba(255,255,255,0.05); border-radius: 4px; padding: 1px 6px; }
+.d-tag strong { color: #e8e8f0; }
+.d-steps { display: flex; gap: 3px; }
+.d-step  { width: 20px; height: 3px; border-radius: 2px; background: #2a2a4a; }
+.d-step.cur  { background: #4d9fff; }
+.d-step.done { background: #00dc50; }
+
+/* ─── MODEL E: Context-first, note secondary ─── */
+.e-wrap { display: flex; gap: 1.5rem; }
+.e-left { display: flex; flex-direction: column; gap: 0.15rem; flex: 1; }
+.e-chord-row { display: flex; align-items: baseline; gap: 0.4rem; flex-wrap: wrap; }
+.e-chord-main { font-size: 2rem; font-weight: 800; color: #c8a020; line-height: 1.1; }
+.e-slash-note { font-size: 1.3rem; color: #7777aa; }
+.e-fb    { font-size: 0.9rem; color: #7777aa; vertical-align: super; }
+.e-inv   { font-size: 0.7rem; color: #7777aa; font-style: italic; align-self: flex-end; }
+.e-sub   { font-size: 0.78rem; color: #7777aa; }
+.e-sub strong { color: #e8e8f0; }
+.e-divider { height: 1px; background: #2a2a4a; margin: 0.4rem 0; }
+.e-note-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.e-note-item { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; padding: 2px 6px; border-radius: 5px; }
+.e-note-item:hover { background: rgba(255,255,255,0.07); }
+.e-note-item.cur { background: rgba(255,255,255,0.12); }
+.e-note-dot { width: 14px; height: 14px; }
+.e-note-name { font-size: 1.05rem; font-weight: 800; }
+.e-note-oct  { font-size: 0.65rem; vertical-align: super; }
+.e-note-deg  { font-size: 0.72rem; color: #7777aa; }
+.e-int-gap   { color: #3a3a5a; font-size: 0.7rem; display: flex; align-items: center; gap: 3px; }
+.e-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; flex-shrink: 0; }
+.e-steps { display: flex; gap: 5px; }
+.e-step  { width: 22px; height: 5px; border-radius: 2px; background: #2a2a4a; }
+.e-step.cur  { background: #4d9fff; }
+.e-step.done { background: #00dc50; }
+.e-formula { font-size: 0.72rem; color: #7777aa; margin-top: auto; }
+</style>
+</head>
+<body>
+<div class="cards">
+
+<!-- ═══════════════════════════════════════════════════════════
+  MODEL A — Command view: large swatch left, mid info, right meta
+  Idea: note identity is primary left; chord identity is center; meta right
+════════════════════════════════════════════════════════════ -->
+<div class="card-wrap">
+<h2>Model A — Left swatch · Center chord + voicing · Right meta</h2>
+<div class="card">
+  <div class="a-grid">
+    <!-- LEFT: current note big -->
+    <div class="a-note-big">
+      <div class="a-swatch sq shape-E" style="width:56px;height:56px;border-radius:6px;"></div>
+      <div class="a-note-name">E<sup style="font-size:1rem">2</sup></div>
+      <div class="a-note-role muted">3rd of Cmaj</div>
+    </div>
+    <!-- MID: chord context + voicing bar -->
+    <div class="a-mid">
+      <div class="a-chord-header">
+        <div class="a-chord-name">Cmaj / E<sup style="font-size:0.8rem;color:#7777aa"> ⁶</sup></div>
+        <div class="a-inversion muted">1st inversion</div>
+      </div>
+      <!-- Voicing pills row -->
+      <div class="a-pills">
+        <div class="a-pill cur">
+          <div class="a-pill-dot sq shape-E" style="border-radius:2px;"></div>
+          <span class="a-pill-note">E<sup>2</sup></span>
+          <span class="a-pill-deg muted">3rd</span>
+        </div>
+        <!-- m6 connector -->
+        <div class="a-int">
+          <svg width="53" height="8" viewBox="0 0 53 8">
+            <rect x="0" y="0" width="4" height="8" rx="1" fill="#ff8c20" opacity="0.55"/>
+            <rect x="7" y="0" width="4" height="8" rx="1" fill="#ff8c20" opacity="0.55"/>
+            <rect x="14" y="0" width="4" height="8" rx="1" fill="#ff8c20" opacity="0.55"/>
+            <rect x="21" y="0" width="4" height="8" rx="1" fill="#ff8c20" opacity="0.55"/>
+            <rect x="28" y="0" width="4" height="8" rx="1" fill="#ff8c20" opacity="0.55"/>
+            <rect x="35" y="0" width="4" height="8" rx="1" fill="#ff8c20" opacity="0.55"/>
+            <rect x="42" y="0" width="4" height="8" rx="1" fill="#ff8c20" opacity="0.55"/>
+            <rect x="49" y="0" width="4" height="8" rx="1" fill="#ff8c20" opacity="0.55"/>
+          </svg>
+          <div class="a-int-lbl" style="color:#ff8c20">m6</div>
+        </div>
+        <div class="a-pill">
+          <div class="a-pill-dot sq shape-C" style="border-radius:2px;opacity:0.4;"></div>
+          <span class="a-pill-note" style="opacity:0.5">C<sup>3</sup></span>
+          <span class="a-pill-deg muted">root</span>
+        </div>
+        <!-- P5 connector -->
+        <div class="a-int">
+          <svg width="46" height="8" viewBox="0 0 46 8">
+            <rect x="0" y="0" width="4" height="8" rx="1" fill="#4d9fff" opacity="0.55"/>
+            <rect x="7" y="0" width="4" height="8" rx="1" fill="#4d9fff" opacity="0.55"/>
+            <rect x="14" y="0" width="4" height="8" rx="1" fill="#4d9fff" opacity="0.55"/>
+            <rect x="21" y="0" width="4" height="8" rx="1" fill="#4d9fff" opacity="0.55"/>
+            <rect x="28" y="0" width="4" height="8" rx="1" fill="#4d9fff" opacity="0.55"/>
+            <rect x="35" y="0" width="4" height="8" rx="1" fill="#4d9fff" opacity="0.55"/>
+            <rect x="42" y="0" width="4" height="8" rx="1" fill="#4d9fff" opacity="0.55"/>
+          </svg>
+          <div class="a-int-lbl" style="color:#4d9fff">P5</div>
+        </div>
+        <div class="a-pill">
+          <div class="a-pill-dot ci shape-G" style="opacity:0.4;"></div>
+          <span class="a-pill-note" style="opacity:0.5">G<sup>3</sup></span>
+          <span class="a-pill-deg muted">5th</span>
+        </div>
+      </div>
+      <div class="a-formula muted">open voicing &nbsp;·&nbsp; C–E–G &nbsp;·&nbsp; 1–3–5</div>
+    </div>
+    <!-- RIGHT: step progress + root-position structure -->
+    <div class="a-right">
+      <div class="a-steps">
+        <div class="a-step cur"></div>
+        <div class="a-step"></div>
+        <div class="a-step"></div>
+      </div>
+      <div class="a-badge">root pos: C <span style="color:#b5e000">M3</span> E <span style="color:#ff8c20">m3</span> G</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+  MODEL B — Vertical stack, everything reads top-to-bottom
+  Idea: chord identity first; voicing second; structure third
+════════════════════════════════════════════════════════════ -->
+<div class="card-wrap">
+<h2>Model B — Swatch left · Stacked context right (chord → voicing → structure)</h2>
+<div class="card">
+  <div class="b-wrap">
+    <div class="b-left">
+      <div class="b-swatch sq shape-E" style="border-radius:6px;"></div>
+      <div class="b-note-name">E<sup style="font-size:1rem">2</sup></div>
+      <div class="b-steps">
+        <div class="b-step cur"></div>
+        <div class="b-step"></div>
+        <div class="b-step"></div>
+      </div>
+    </div>
+    <div class="b-right">
+      <!-- Row 1: chord identity -->
+      <div class="b-chord-line">
+        <div class="b-chord-main">Cmaj</div>
+        <div class="b-chord-slash">/ E</div>
+        <sup class="b-chord-fb">⁶</sup>
+        <div class="b-chord-inv muted">1st inversion</div>
+        <span class="b-voicing-badge">open voicing</span>
+      </div>
+      <!-- Row 2: current note role in plain English -->
+      <div class="b-deg-role">You're playing the <strong>major 3rd</strong> (E) in the bass</div>
+      <div class="b-divider"></div>
+      <!-- Row 3: voicing bar -->
+      <div class="b-voicing-row">
+        <div class="b-pill cur">
+          <div class="b-pill-dot sq shape-E" style="border-radius:2px;"></div>
+          <span class="b-pill-note">E<sup>2</sup></span>
+          <span class="b-pill-deg muted">3rd</span>
+        </div>
+        <div class="b-int">
+          <svg width="53" height="7" viewBox="0 0 53 7"><rect x="0" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.55"/><rect x="7" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.55"/><rect x="14" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.55"/><rect x="21" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.55"/><rect x="28" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.55"/><rect x="35" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.55"/><rect x="42" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.55"/><rect x="49" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.55"/></svg>
+          <div class="b-int-lbl" style="color:#ff8c20">m6↑</div>
+        </div>
+        <div class="b-pill">
+          <div class="b-pill-dot sq shape-C" style="border-radius:2px;opacity:0.4;"></div>
+          <span class="b-pill-note" style="opacity:0.55">C<sup>3</sup></span>
+          <span class="b-pill-deg muted">root</span>
+        </div>
+        <div class="b-int">
+          <svg width="46" height="7" viewBox="0 0 46 7"><rect x="0" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.55"/><rect x="7" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.55"/><rect x="14" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.55"/><rect x="21" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.55"/><rect x="28" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.55"/><rect x="35" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.55"/><rect x="42" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.55"/></svg>
+          <div class="b-int-lbl" style="color:#4d9fff">P5↑</div>
+        </div>
+        <div class="b-pill">
+          <div class="b-pill-dot ci shape-G" style="opacity:0.4;"></div>
+          <span class="b-pill-note" style="opacity:0.55">G<sup>3</sup></span>
+          <span class="b-pill-deg muted">5th</span>
+        </div>
+      </div>
+      <!-- Row 4: root-position structure -->
+      <div class="b-sub">
+        <div class="b-sub-item">root pos: <strong>C</strong> <span style="color:#b5e000;font-weight:700">M3</span> <strong>E</strong> <span style="color:#ff8c20;font-weight:700">m3</span> <strong>G</strong></div>
+        <div class="b-sub-item">formula: <strong>1–3–5</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+  MODEL C — Minimal two-line
+  Idea: chord name + inversion large; one-line note status small; no voicing bar
+════════════════════════════════════════════════════════════ -->
+<div class="card-wrap">
+<h2>Model C — Minimal: two lines, no voicing bar</h2>
+<div class="card">
+  <div class="d-wrap">
+    <div class="d-swatch sq shape-E" style="border-radius:6px;cursor:pointer;"></div>
+    <div class="d-center">
+      <div class="d-top">
+        <div class="d-note">E<sup style="font-size:1rem">2</sup></div>
+        <div style="display:flex;flex-direction:column;gap:0.1rem;">
+          <div class="d-chord">Cmaj / E <sup style="font-size:0.7rem;color:#7777aa">⁶</sup></div>
+          <div style="font-size:0.7rem;color:#7777aa;font-style:italic">1st inversion · open voicing · 3rd in bass</div>
+        </div>
+      </div>
+      <div class="d-bottom">
+        <div class="d-tag">note <strong>1</strong> of <strong>3</strong></div>
+        <div class="d-tag">formula <strong>1–3–5</strong></div>
+        <div class="d-tag">root pos: <strong>C</strong> <span style="color:#b5e000">M3</span> <strong>E</strong> <span style="color:#ff8c20">m3</span> <strong>G</strong></div>
+        <div class="d-steps">
+          <div class="d-step cur"></div>
+          <div class="d-step"></div>
+          <div class="d-step"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+  MODEL D — Context-first: chord name dominates, note secondary
+  Idea: what chord is this, what inversion, then which note you're on
+════════════════════════════════════════════════════════════ -->
+<div class="card-wrap">
+<h2>Model D — Chord-first: large chord name, note subordinate</h2>
+<div class="card">
+  <div class="e-wrap">
+    <div class="e-left">
+      <!-- Chord identity row -->
+      <div class="e-chord-row">
+        <div class="e-chord-main">Cmaj</div>
+        <div class="e-slash-note">/ E<sup class="e-fb">⁶</sup></div>
+        <div class="e-inv muted">1st inversion</div>
+      </div>
+      <div class="e-sub" style="margin-top:0.15rem;">open voicing &nbsp;·&nbsp; <strong>C–E–G</strong> &nbsp;·&nbsp; root pos: <strong>C</strong> <span style="color:#b5e000">M3</span> <strong>E</strong> <span style="color:#ff8c20">m3</span> <strong>G</strong></div>
+      <div class="e-divider"></div>
+      <!-- Note row: all 3 notes, current highlighted -->
+      <div class="e-note-row">
+        <div class="e-note-item cur">
+          <div class="e-note-dot sq shape-E" style="border-radius:2px;"></div>
+          <span class="e-note-name">E<sup class="e-note-oct">2</sup></span>
+          <span class="e-note-deg muted">3rd · bass</span>
+        </div>
+        <!-- m6 gap marker -->
+        <div class="e-int-gap">
+          <svg width="39" height="7" viewBox="0 0 39 7"><rect x="0" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.5"/><rect x="7" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.5"/><rect x="14" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.5"/><rect x="21" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.5"/><rect x="28" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.5"/><rect x="35" y="0" width="4" height="7" rx="1" fill="#ff8c20" opacity="0.5"/></svg>
+          <span style="color:#ff8c20;font-size:0.55rem;font-weight:700">m6</span>
+        </div>
+        <div class="e-note-item" style="opacity:0.5;">
+          <div class="e-note-dot sq shape-C" style="border-radius:2px;"></div>
+          <span class="e-note-name">C<sup class="e-note-oct">3</sup></span>
+          <span class="e-note-deg muted">root</span>
+        </div>
+        <!-- P5 gap marker -->
+        <div class="e-int-gap">
+          <svg width="46" height="7" viewBox="0 0 46 7"><rect x="0" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.5"/><rect x="7" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.5"/><rect x="14" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.5"/><rect x="21" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.5"/><rect x="28" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.5"/><rect x="35" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.5"/><rect x="42" y="0" width="4" height="7" rx="1" fill="#4d9fff" opacity="0.5"/></svg>
+          <span style="color:#4d9fff;font-size:0.55rem;font-weight:700">P5</span>
+        </div>
+        <div class="e-note-item" style="opacity:0.5;">
+          <div class="e-note-dot ci shape-G"></div>
+          <span class="e-note-name">G<sup class="e-note-oct">3</sup></span>
+          <span class="e-note-deg muted">5th</span>
+        </div>
+      </div>
+    </div>
+    <!-- Right: step progress -->
+    <div class="e-right">
+      <div class="e-steps">
+        <div class="e-step cur"></div>
+        <div class="e-step"></div>
+        <div class="e-step"></div>
+      </div>
+      <div class="e-formula muted">note 1 of 3</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+  MODEL E — Sentence form: describe it in plain language
+  Idea: almost no labels, just reads as a sentence
+════════════════════════════════════════════════════════════ -->
+<div class="card-wrap">
+<h2>Model E — Prose / sentence form</h2>
+<div class="card">
+  <div style="display:flex;gap:1.25rem;align-items:center;">
+    <div class="sq shape-E" style="width:50px;height:50px;border-radius:5px;flex-shrink:0;cursor:pointer;"></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:0.4rem;">
+      <div style="font-size:1.05rem;line-height:1.45;">
+        Play &nbsp;<strong style="font-size:1.3rem;">E<sup>2</sup></strong>,
+        the <strong style="color:#f7dd00">major 3rd</strong> of <strong style="color:#c8a020;font-size:1.15rem;">Cmaj</strong>.
+        This voicing has E in the bass &mdash; <span style="color:#7777aa">1st inversion (⁶)</span>.
+      </div>
+      <div style="font-size:0.8rem;color:#7777aa;display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+        <span>open voicing E<sup>2</sup>–C<sup>3</sup>–G<sup>3</sup></span>
+        <span style="color:#3a3a5a">·</span>
+        <span>root pos: C <span style="color:#b5e000;font-weight:700">M3</span> E <span style="color:#ff8c20;font-weight:700">m3</span> G</span>
+        <span style="color:#3a3a5a">·</span>
+        <span>note 1 of 3
+          <span style="display:inline-flex;gap:3px;margin-left:4px;vertical-align:middle;">
+            <span style="width:18px;height:3px;border-radius:2px;background:#4d9fff;display:inline-block;"></span>
+            <span style="width:18px;height:3px;border-radius:2px;background:#2a2a4a;display:inline-block;"></span>
+            <span style="width:18px;height:3px;border-radius:2px;background:#2a2a4a;display:inline-block;"></span>
+          </span>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+</div><!-- end .cards -->
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Keyboard component — isolated test</title>
+  <link rel="stylesheet" href="css/keyboard.css?v=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; background: #1b1b22; color: #e7e7ee;
+           margin: 0; padding: 32px; }
+    h1 { font-size: 18px; font-weight: 600; }
+    .panel { max-width: 920px; margin: 0 auto; }
+    .controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 18px 0; }
+    button.ctl { background: #2b2b35; color: #e7e7ee; border: 1px solid #44444f;
+                 border-radius: 6px; padding: 6px 12px; cursor: pointer; font: inherit; }
+    button.ctl:hover { background: #353541; }
+    #log { background: #111118; border: 1px solid #2c2c36; border-radius: 8px;
+           padding: 12px; height: 220px; overflow: auto; font-family: ui-monospace,
+           SFMono-Regular, Menlo, monospace; font-size: 12px; margin-top: 20px;
+           white-space: pre-wrap; }
+    .ok { color: #6fd08c; } .bad { color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="panel">
+    <h1>Keyboard — isolated test (Phase 1)</h1>
+
+    <div class="controls">
+      <button class="ctl" data-mode="play">Play mode</button>
+      <button class="ctl" data-mode="quiz">Quiz mode (target = a C)</button>
+      <button class="ctl" data-hl="C4">Highlight C4</button>
+      <button class="ctl" data-hl="">Clear highlight</button>
+    </div>
+
+    <div id="kb"></div>
+
+    <div id="log">Click keys — events log here and in the devtools console.</div>
+  </div>
+
+  <script src="js/components/keyboard.js?v=1"></script>
+  <script>
+    const logEl = document.getElementById("log");
+    function log(evt) {
+      const line = document.createElement("div");
+      let cls = "";
+      if (evt.event === "key_quizzed") cls = evt.payload.isCorrect ? "ok" : "bad";
+      line.className = cls;
+      line.textContent = JSON.stringify(evt);
+      logEl.prepend(line);
+    }
+
+    let kb = new MtheoryKeyboard("#kb", {
+      octaves: 3,
+      startOctave: 3,
+      labels: "naturals",
+      highlight: "C4",
+      onEvent: log,
+    });
+
+    document.querySelectorAll("[data-mode]").forEach((b) => {
+      b.addEventListener("click", () => {
+        if (b.dataset.mode === "quiz") kb.setQuiz({ target: "C4" });
+        else kb.setQuiz(null);
+      });
+    });
+    document.querySelectorAll("[data-hl]").forEach((b) => {
+      b.addEventListener("click", () => {
+        kb.setHighlight(b.dataset.hl || null);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,395 @@
+{% extends "base.html" %}
+
+{% block title %}Theory Trainer{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block content %}
+<div class="page-trainer">
+
+  <!-- ── Top bar: score + settings toggle ─────────────────────── -->
+  <div class="trainer-topbar no-print">
+    <div class="score-bar">
+      <span class="score-item score-correct">&#10003; <span id="sc-correct">0</span></span>
+      <span class="score-item score-streak">&#9733; <span id="sc-streak">0</span> streak</span>
+      <span class="score-item score-wrong">&#10007; <span id="sc-wrong">0</span></span>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn-secondary" onclick="skipQuestion()" id="skip-btn">Skip →</button>
+      <button class="btn-icon btn-settings" onclick="toggleSettings()" title="Settings">&#9881;</button>
+    </div>
+  </div>
+
+  <!-- ── Settings drawer ──────────────────────────────────────── -->
+  <div class="settings-drawer no-print" id="settings-drawer" aria-hidden="true">
+    <div class="settings-inner">
+      <h2 class="panel-heading">Training Settings</h2>
+
+      <div class="settings-section">
+        <label class="panel-subheading">Question type</label>
+        <div class="radio-group" id="mode-radios">
+          <label class="radio-pill"><input type="radio" name="mode" value="all" checked> All mixed</label>
+          <label class="radio-pill"><input type="radio" name="mode" value="intervals"> Intervals</label>
+          <label class="radio-pill"><input type="radio" name="mode" value="positional"> Positional</label>
+          <label class="radio-pill"><input type="radio" name="mode" value="scale_degrees"> Scale degrees</label>
+          <label class="radio-pill"><input type="radio" name="mode" value="chords"> Chord tones</label>
+          <label class="radio-pill"><input type="radio" name="mode" value="identify"> Identify note</label>
+        </div>
+      </div>
+
+      <!-- Interval filter (shown when mode = intervals or positional or all) -->
+      <div class="settings-section" id="section-intervals">
+        <label class="panel-subheading">Intervals to drill</label>
+        <div class="check-grid" id="interval-checks">
+          {% for key, label in [("M2","Maj 2"),("m3","Min 3"),("M3","Maj 3"),("P4","Perf 4"),("P5","Perf 5"),("m6","Min 6"),("M6","Maj 6"),("m7","Min 7"),("M7","Maj 7")] %}
+          <label class="check-chip"><input type="checkbox" name="interval" value="{{ key }}" checked> {{ label }}</label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Degree filter -->
+      <div class="settings-section hidden" id="section-degrees">
+        <label class="panel-subheading">Scale degrees to drill</label>
+        <div class="check-grid" id="degree-checks">
+          {% for sym, label in [("b2","b2"),("2","2"),("b3","b3"),("3","3"),("4","4"),("b5","b5"),("5","5"),("b6","b6"),("6","6"),("b7","b7"),("7","7")] %}
+          <label class="check-chip"><input type="checkbox" name="degree" value="{{ sym }}" checked> {{ label }}</label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Chord filter -->
+      <div class="settings-section hidden" id="section-chords">
+        <label class="panel-subheading">Chord types to drill</label>
+        <div class="check-grid" id="chord-checks">
+          {% for key, label in [("major","Major"),("minor","Minor"),("dom7","Dom 7"),("maj7","Maj 7"),("min7","Min 7"),("dim","Dim"),("aug","Aug")] %}
+          <label class="check-chip"><input type="checkbox" name="chord" value="{{ key }}" checked> {{ label }}</label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Root note filter -->
+      <div class="settings-section">
+        <label class="panel-subheading">Root notes (leave all unchecked = any)</label>
+        <div class="check-grid" id="root-checks">
+          {% for note in note_system %}
+          <label class="check-chip" style="--chip-color:{{ note_system[note]['color'] }}">
+            <input type="checkbox" name="root" value="{{ note }}"> {{ note }}
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Misc toggles -->
+      <div class="settings-section">
+        <label class="panel-subheading">Options</label>
+        <label class="toggle-row">
+          <input type="checkbox" id="opt-show-hint" checked>
+          <span>Show hint text</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="opt-show-answer-on-wrong" checked>
+          <span>Reveal answer positions on wrong guess</span>
+        </label>
+      </div>
+
+      <button class="btn-primary btn-full" onclick="applySettings()">Apply &amp; New Question</button>
+    </div>
+  </div>
+
+  <!-- ── Question card ────────────────────────────────────────── -->
+  <div class="question-card no-print" id="question-card">
+    <p class="question-prompt" id="question-prompt">{{ question.prompt }}</p>
+    <span class="question-hint" id="question-hint">{{ question.hint if question.hint else '' }}</span>
+  </div>
+
+  <!-- ── Detected note + feedback ─────────────────────────────── -->
+  <div class="detection-row no-print">
+    <div class="note-shape-display" id="note-shape-display"></div>
+    <span class="detected-name" id="detected-name">&mdash;</span>
+    <span class="feedback-msg" id="feedback-msg"></span>
+  </div>
+
+  <!-- ── Mic controls ─────────────────────────────────────────── -->
+  <div class="mic-controls no-print">
+    <div class="device-row">
+      <label for="device-select" class="device-label">Audio input</label>
+      <select id="device-select" class="device-select">
+        <option value="">Default input</option>
+      </select>
+      <button class="btn-icon" title="Refresh device list" onclick="populateDevices()">&#8635;</button>
+    </div>
+    <div class="mic-row">
+      <button id="listen-btn" class="btn-primary btn-large" onclick="toggleListening()">
+        Start Listening
+      </button>
+      <span class="mic-status" id="mic-status">Microphone off</span>
+    </div>
+  </div>
+
+  <!-- ── Fretboard ────────────────────────────────────────────── -->
+  <div class="fretboard-container" id="fretboard-container">
+    {{ svg | safe }}
+  </div>
+
+</div>
+
+<!-- Inject server-side question into JS safely -->
+<script id="question-data" type="application/json">{{ question | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/audio.js"></script>
+<script>
+// ── Session state ────────────────────────────────────────────────────────────
+const state = {
+  correct: parseInt(sessionStorage.getItem('tr-correct') || '0'),
+  wrong:   parseInt(sessionStorage.getItem('tr-wrong')   || '0'),
+  streak:  parseInt(sessionStorage.getItem('tr-streak')  || '0'),
+  currentQuestion: JSON.parse(document.getElementById('question-data').textContent),
+  listening: false,
+  // locked = true means we played a WRONG note — fretboard shows answer, waiting for correct
+  locked: false,
+  wrongOnThisQuestion: false,
+};
+
+function saveState() {
+  sessionStorage.setItem('tr-correct', state.correct);
+  sessionStorage.setItem('tr-wrong',   state.wrong);
+  sessionStorage.setItem('tr-streak',  state.streak);
+}
+function updateScoreDisplay() {
+  document.getElementById('sc-correct').textContent = state.correct;
+  document.getElementById('sc-wrong').textContent   = state.wrong;
+  document.getElementById('sc-streak').textContent  = state.streak;
+}
+updateScoreDisplay();
+
+// ── Settings state ───────────────────────────────────────────────────────────
+function getSettings() {
+  const mode      = document.querySelector('input[name="mode"]:checked').value;
+  const intervals = [...document.querySelectorAll('input[name="interval"]:checked')].map(i => i.value);
+  const degrees   = [...document.querySelectorAll('input[name="degree"]:checked')].map(i => i.value);
+  const chords    = [...document.querySelectorAll('input[name="chord"]:checked')].map(i => i.value);
+  const roots     = [...document.querySelectorAll('input[name="root"]:checked')].map(i => i.value);
+  return { mode, intervals, degrees, chords, roots };
+}
+
+function buildQuestionUrl() {
+  const s   = getSettings();
+  let url   = `/api/lesson/question?mode=${encodeURIComponent(s.mode)}`;
+  if (s.intervals.length) url += `&intervals=${encodeURIComponent(s.intervals.join(','))}`;
+  if (s.degrees.length)   url += `&degrees=${encodeURIComponent(s.degrees.join(','))}`;
+  if (s.chords.length)    url += `&chords=${encodeURIComponent(s.chords.join(','))}`;
+  if (s.roots.length)     url += `&roots=${encodeURIComponent(s.roots.join(','))}`;
+  return url;
+}
+
+// ── Settings drawer ──────────────────────────────────────────────────────────
+let _settingsOpen = false;
+function toggleSettings() {
+  _settingsOpen = !_settingsOpen;
+  const drawer = document.getElementById('settings-drawer');
+  drawer.classList.toggle('open', _settingsOpen);
+  drawer.setAttribute('aria-hidden', String(!_settingsOpen));
+}
+
+// Show/hide sub-sections based on selected mode
+document.querySelectorAll('input[name="mode"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const m = radio.value;
+    document.getElementById('section-intervals').classList.toggle('hidden',
+      !['all','intervals','positional'].includes(m));
+    document.getElementById('section-degrees').classList.toggle('hidden',
+      !['all','scale_degrees'].includes(m));
+    document.getElementById('section-chords').classList.toggle('hidden',
+      !['all','chords'].includes(m));
+  });
+});
+
+function applySettings() {
+  toggleSettings();
+  loadNextQuestion();
+}
+
+// ── Detected-note display ────────────────────────────────────────────────────
+function showDetectedNote(noteInfo) {
+  const shape = document.getElementById('note-shape-display');
+  const name  = document.getElementById('detected-name');
+  shape.className = 'note-shape-display ' + noteInfo.shape;
+  shape.style.backgroundColor = noteInfo.color;
+  name.textContent = noteInfo.noteName;
+}
+
+// ── Answer submission ────────────────────────────────────────────────────────
+async function onNoteDetected(noteInfo) {
+  // If we already got a correct answer for this question, ignore until next loads
+  if (state.locked && !state.wrongOnThisQuestion) return;
+
+  showDetectedNote(noteInfo);
+
+  try {
+    const res = await fetch('/api/lesson/answer', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        question:    state.currentQuestion,
+        played_note: noteInfo.noteName,
+      }),
+    });
+    const result = await res.json();
+    const fbEl   = document.getElementById('feedback-msg');
+    const { root, pin } = _questionFretboardParams(state.currentQuestion);
+    const showAnswerOnWrong = document.getElementById('opt-show-answer-on-wrong').checked;
+
+    if (result.correct) {
+      // Only count it as correct if they hadn't already missed this question
+      if (!state.wrongOnThisQuestion) {
+        state.correct++;
+        state.streak++;
+      }
+      state.locked             = true;
+      state.wrongOnThisQuestion = false;
+      fbEl.textContent = result.feedback;
+      fbEl.className   = 'feedback-msg feedback-correct';
+      refreshFretboard(noteInfo.noteName, { root, pin });
+      saveState();
+      updateScoreDisplay();
+      // Auto-advance after correct
+      setTimeout(loadNextQuestion, 1800);
+    } else {
+      // Wrong — stay on this question
+      if (!state.wrongOnThisQuestion) {
+        state.wrong++;
+        state.streak = 0;
+        state.wrongOnThisQuestion = true;
+      }
+      state.locked = true;   // brief lock to debounce rapid re-detects
+      fbEl.textContent = result.feedback;
+      fbEl.className   = 'feedback-msg feedback-wrong';
+      if (showAnswerOnWrong) {
+        const expected = Array.isArray(result.expected)
+          ? result.expected.join(',') : result.expected;
+        refreshFretboard(expected, { root, pin });
+      }
+      saveState();
+      updateScoreDisplay();
+      // Unlock after short pause so they can try again
+      setTimeout(() => { state.locked = false; }, 1200);
+    }
+  } catch (err) {
+    console.error('Answer error:', err);
+    state.locked = false;
+  }
+}
+
+// ── Fretboard helpers ────────────────────────────────────────────────────────
+function _fretboardUrl({ notes = '', root = '', pin = '' } = {}) {
+  let url = '/api/fretboard/svg?num_frets=15';
+  if (notes) url += `&notes=${encodeURIComponent(notes)}`;
+  if (root)  url += `&root=${encodeURIComponent(root)}`;
+  if (pin)   url += `&pin=${encodeURIComponent(pin)}`;
+  return url;
+}
+
+async function refreshFretboard(notesCsv, { root = '', pin = '' } = {}) {
+  try {
+    const res  = await fetch(_fretboardUrl({ notes: notesCsv, root, pin }));
+    const data = await res.json();
+    document.getElementById('fretboard-container').innerHTML = data.svg;
+  } catch (err) {
+    console.error('Fretboard refresh error:', err);
+  }
+}
+
+function _questionFretboardParams(question) {
+  const root = question.root || '';
+  const pin  = question.position
+    ? `${question.position.string}:${question.position.fret}` : '';
+  return { root, pin };
+}
+
+// ── Next question ────────────────────────────────────────────────────────────
+async function loadNextQuestion() {
+  try {
+    const res      = await fetch(buildQuestionUrl());
+    const question = await res.json();
+    state.currentQuestion    = question;
+    state.locked             = false;
+    state.wrongOnThisQuestion = false;
+
+    const showHint = document.getElementById('opt-show-hint').checked;
+    document.getElementById('question-prompt').textContent = question.prompt;
+    document.getElementById('question-hint').textContent   = showHint ? (question.hint || '') : '';
+    document.getElementById('feedback-msg').textContent    = '';
+    document.getElementById('feedback-msg').className      = 'feedback-msg';
+    document.getElementById('detected-name').textContent   = '\u2014';
+
+    const shape = document.getElementById('note-shape-display');
+    shape.className             = 'note-shape-display';
+    shape.style.backgroundColor = '';
+
+    const { root, pin } = _questionFretboardParams(question);
+    refreshFretboard('', { root, pin });
+  } catch (err) {
+    console.error('Next question error:', err);
+    state.locked = false;
+  }
+}
+
+// ── Skip ─────────────────────────────────────────────────────────────────────
+function skipQuestion() {
+  state.wrongOnThisQuestion = false;
+  loadNextQuestion();
+}
+
+// ── Device picker ────────────────────────────────────────────────────────────
+async function populateDevices() {
+  const sel     = document.getElementById('device-select');
+  const current = sel.value;
+  const inputs  = await listAudioInputs();
+  while (sel.options.length > 1) sel.remove(1);
+  inputs.forEach(({ deviceId, label }) => {
+    const opt = document.createElement('option');
+    opt.value = deviceId;
+    opt.text  = label;
+    if (deviceId === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+populateDevices();
+
+// ── Microphone toggle ────────────────────────────────────────────────────────
+async function toggleListening() {
+  const btn      = document.getElementById('listen-btn');
+  const status   = document.getElementById('mic-status');
+  const deviceId = document.getElementById('device-select').value || undefined;
+
+  if (!state.listening) {
+    btn.textContent = 'Connecting…';
+    btn.disabled    = true;
+    const ok = await startListening(onNoteDetected, deviceId);
+    btn.disabled = false;
+    if (ok) {
+      state.listening    = true;
+      btn.textContent    = 'Stop Listening';
+      btn.className      = 'btn-secondary btn-large';
+      status.textContent = 'Microphone active';
+      status.className   = 'mic-status mic-active';
+      populateDevices();
+    } else {
+      btn.textContent    = 'Start Listening';
+      btn.className      = 'btn-primary btn-large';
+      status.textContent = 'Permission denied or device unavailable';
+      status.className   = 'mic-status mic-error';
+    }
+  } else {
+    stopListening();
+    state.listening    = false;
+    btn.textContent    = 'Start Listening';
+    btn.className      = 'btn-primary btn-large';
+    status.textContent = 'Microphone off';
+    status.className   = 'mic-status';
+  }
+}
+</script>
+{% endblock %}

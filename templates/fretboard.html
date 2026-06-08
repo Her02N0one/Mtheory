@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Fretboard Diagram{% endblock %}
+
+{% block content %}
+<div class="page-fretboard">
+
+  <!-- ── Controls panel ───────────────────────────────────────── -->
+  <aside class="controls no-print">
+    <h2 class="panel-heading">Diagram Controls</h2>
+
+    <form method="GET" action="/fretboard" id="diagram-form">
+      <div class="form-group">
+        <label for="notes">Highlight Notes</label>
+        <input type="text" id="notes" name="notes"
+               value="{{ ','.join(highlighted) }}"
+               placeholder="e.g. C, E, G"
+               autocomplete="off">
+        <small>Comma-separated note names</small>
+      </div>
+
+      <div class="form-group">
+        <label for="num_frets">Frets</label>
+        <select name="num_frets" id="num_frets">
+          {% for n in [12, 15, 18, 21, 24] %}
+          <option value="{{ n }}" {% if n == num_frets %}selected{% endif %}>{{ n }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group checkbox">
+        <input type="checkbox" id="show_all" name="show_all" value="true"
+               {% if show_all %}checked{% endif %}>
+        <label for="show_all">Show all notes (dim)</label>
+      </div>
+
+      <button type="submit" class="btn-primary">Generate</button>
+      <button type="button" class="btn-secondary" onclick="clearNotes()">Clear</button>
+    </form>
+
+    <!-- Quick-select buttons for every note in the system -->
+    <div class="quick-select">
+      <h3 class="panel-subheading">Quick Add</h3>
+      <div class="quick-buttons">
+        {% for note, data in note_system.items() %}
+        <button class="note-btn {{ data.shape }}"
+                style="background:{{ data.color }}"
+                onclick="addNote('{{ note }}')"
+                title="{{ note }}">{{ note }}</button>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Common presets -->
+    <div class="presets">
+      <h3 class="panel-subheading">Presets</h3>
+      {% set presets = [
+        ("C Major", "C,E,G"),
+        ("A Minor", "A,C,E"),
+        ("C Major Scale", "C,D,E,F,G,A,B"),
+        ("A Minor Scale", "A,B,C,D,E,F,G"),
+        ("Pentatonic (Am)", "A,C,D,E,G"),
+      ] %}
+      {% for label, value in presets %}
+      <button class="btn-preset" onclick="applyPreset('{{ value }}')">{{ label }}</button>
+      {% endfor %}
+    </div>
+
+    <hr class="divider">
+    <button onclick="window.print()" class="btn-secondary btn-full">Print Diagram</button>
+  </aside>
+
+  <!-- ── Diagram area ──────────────────────────────────────────── -->
+  <section class="diagram-area">
+    <div class="fretboard-container">
+      {{ svg | safe }}
+    </div>
+
+    {% if highlighted %}
+    <div class="legend no-print">
+      <h3>Notes on diagram</h3>
+      <div class="legend-items">
+        {% for note in highlighted %}
+        {% if note in note_system %}
+        <div class="legend-item">
+          <div class="note-indicator {{ note_system[note]['shape'] }}"
+               style="background:{{ note_system[note]['color'] }}"></div>
+          <span>{{ note }}</span>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function addNote(note) {
+    const input   = document.getElementById('notes');
+    const current = input.value.split(',').map(n => n.trim()).filter(Boolean);
+    if (!current.includes(note)) {
+      current.push(note);
+      input.value = current.join(', ');
+    }
+  }
+  function clearNotes() {
+    document.getElementById('notes').value = '';
+  }
+  function applyPreset(value) {
+    document.getElementById('notes').value = value;
+    document.getElementById('diagram-form').submit();
+  }
+</script>
+{% endblock %}

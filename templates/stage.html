@@ -1,0 +1,182 @@
+﻿{% extends "base.html" %}
+{% block title %}{{ stage.title }}{% endblock %}
+
+{% block content %}
+<div class="page-stage">
+
+  <!-- ── Theory Primer overlay (shown before first task if primer_url is set) ──── -->
+  <div class="primer-overlay hidden" id="primer-overlay">
+    <div class="primer-modal">
+      <div class="primer-body" id="primer-body"></div>
+      <div class="primer-footer">
+        <a href="#" class="btn-ghost btn-sm" onclick="dismissPrimer(); return false;">Skip</a>
+        <button class="btn-primary btn-large" onclick="dismissPrimer()">Begin Lesson →</button>
+      </div>
+    </div>
+  </div>
+  <!-- â”€â”€ Per-phase teaching card (shown when a phase with `teach` begins) â”€â”€â”€â”€â”€â”€ -->
+  <div class="primer-overlay hidden" id="teach-overlay">
+    <div class="primer-modal primer-modal-teach">
+      <div class="primer-body" id="teach-body"></div>
+      <div class="primer-footer">
+        <button class="btn-primary btn-large" onclick="dismissPhaseTeach()">Got it →</button>
+      </div>
+    </div>
+  </div>
+  <!-- â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <div class="stage-header no-print">
+    <a href="/learn" class="btn-ghost btn-sm">&#8592; Path</a>
+    <div class="stage-header-info">
+      <span class="stage-header-title">{{ stage.title }}</span>
+      <span class="stage-header-sub">{{ stage.subtitle }}</span>
+    </div>
+    <div class="stage-header-score">
+      <span id="hdr-correct">0</span>
+      <span class="muted"> correct</span>
+    </div>
+  </div>
+
+  <!-- â”€â”€ Progress bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <!-- Action row: progress+card left, mic+detection right -->
+  <div class="stage-action-row no-print">
+    <div class="stage-action-left">
+      <div class="stage-prog-wrap" id="stage-prog-wrap">
+        <div class="stage-phase-banner" id="phase-banner">
+          <div class="phase-banner-top">
+            <span class="phase-label" id="phase-label"></span>
+            <span class="phase-pips" id="phase-pips"></span>
+            <span class="phase-dev-nav no-print" title="Skip phases (testing)">
+              <button class="phase-dev-btn" onclick="devPhase(-1)">&#8249; phase</button>
+              <button class="phase-dev-btn" onclick="devPhase(1)">phase &#8250;</button>
+            </span>
+          </div>
+          <span class="phase-desc" id="phase-desc"></span>
+        </div>
+        <div class="stage-pattern-label" id="stage-pattern-label">
+          <span id="phase-pattern-label" class="muted"></span>
+          <span class="seg-jump-btns" id="seg-jump-btns"></span>
+        </div>
+        <div class="stage-prog-bar" id="prog-bar" style="--color: {{ stage.color }}">
+          <div class="stage-prog-fill" id="prog-fill" style="width:0%"></div>
+        </div>
+        <div class="stage-prog-labels">
+          <span class="muted" id="prog-label"></span>
+          <span id="wrong-label" class="muted"></span>
+        </div>
+      </div>
+      <div class="stage-note-card" id="note-card">
+        <div class="snc-inner">
+          <div class="snc-target" id="snc-target">
+            <!-- Filled by JS -->
+          </div>
+          <div class="snc-context">
+            <div class="theory-degree" id="theory-degree"></div>
+            <div class="theory-motion" id="theory-motion"></div>
+            <div class="theory-desc" id="theory-desc"></div>
+          </div>
+          <div class="snc-action-row">
+            <button class="btn-hear" id="hear-btn" onclick="hearTarget()">
+              &#9654; Hear it
+            </button>
+            <button class="btn-hear" id="hear-prog-btn" onclick="hearProgression()" hidden>
+              &#9654;&#9654; Hear progression
+            </button>
+            <span class="snc-feedback" id="snc-feedback"></span>
+          </div>
+        </div>
+        <div class="snc-hint" id="snc-hint">Play this note anywhere on the neck &#8595;</div>
+      </div>
+    </div>
+    <div class="stage-action-right">
+      <div class="mic-controls">
+        <div class="device-row">
+          <label for="device-select" class="device-label">Audio input</label>
+          <select id="device-select" class="device-select">
+            <option value="">Default input</option>
+          </select>
+          <button class="btn-icon" title="Refresh device list" onclick="populateDevices()">&#8635;</button>
+        </div>
+        <div class="mic-row">
+          <button id="listen-btn" class="btn-primary btn-large" onclick="toggleListening()">
+            Start Listening
+          </button>
+          <span class="mic-status" id="mic-status">Microphone off</span>
+        </div>
+      </div>
+      <div class="detection-row">
+        <div class="note-shape-display" id="note-shape-display"></div>
+        <span class="detected-name" id="detected-name">&mdash;</span>
+        <span class="intonation-badge" id="intonation-badge"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Queue look-ahead strip -->
+  <div class="queue-strip no-print" id="queue-strip"></div>
+
+  <!-- Fretboard + CoF sidebar -->
+  <div class="fret-section">
+    <div class="fret-main">
+      <div class="fretboard-container" id="fretboard-container">
+        {{ svg | safe }}
+      </div>
+      <div class="theory-panel" id="theory-panel">
+          <div class="theory-arp" id="theory-arp"></div>
+      </div>
+    </div>
+    <div class="fret-sidebar no-print">
+      <div class="theory-circles-wrap">
+        <div class="theory-circle-wrap" id="cof-wrap">
+          <svg id="chrom-circle" class="chrom-circle" viewBox="-10 -10 220 220" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="chrom-circle-label">Circle of Fifths</div>
+        </div>
+        <div class="theory-circle-wrap" id="clock-wrap" style="display:none">
+          <svg id="chrom-clock" class="chrom-circle" viewBox="-10 -10 220 220" xmlns="http://www.w3.org/2000/svg"></svg>
+          <div class="chrom-circle-label">Chromatic Clock</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Phase-up toast â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <div class="phase-toast hidden" id="phase-toast"></div>
+
+  <!-- â”€â”€ Completion overlay â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+  <div class="completion-overlay hidden" id="completion-overlay">
+    <div class="completion-card">
+      <div class="completion-stars" id="comp-stars"></div>
+      <h2 class="completion-title" id="comp-title"></h2>
+      <p class="completion-body" id="comp-body"></p>
+      <div class="completion-actions">
+        {% for next_id in stage.unlocks %}
+          {% set ns = stage_map[next_id] %}
+          <a href="/learn/{{ ns.id }}" class="btn-primary" id="unlock-{{ ns.id }}" hidden>
+            Next: {{ ns.title }} â†’
+          </a>
+        {% endfor %}
+        <a href="/learn/{{ stage.id }}" class="btn-secondary">Play again</a>
+        <a href="/learn" class="btn-ghost">â† Path</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Stage data (consumed by JS below) -->
+<script id="stage-data" type="application/json">{{ stage_json | safe }}</script>{% endblock %}
+{% block scripts %}
+<script src="/static/js/audio.js"></script>
+<script>
+// -- Stage data extraction (globals used by all modules) ----------------------
+const STAGE          = JSON.parse(document.getElementById('stage-data').textContent);
+const NOTES          = STAGE.notes;
+const PHASES         = STAGE.phases;
+const STAGE_ID       = STAGE.id;
+const GHOST_CSV      = NOTES.join(',');
+const PROGRESS_KEY   = 'mtheory-progress';
+const ROOT_NOTE_NAME = NOTES[0];
+</script>
+<script src="/static/js/theory.js?v=13"></script>
+<script src="/static/js/queue.js?v=4"></script>
+<script src="/static/js/render.js?v=32"></script>
+<script src="/static/js/stage.js?v=6"></script>
+{% endblock %}

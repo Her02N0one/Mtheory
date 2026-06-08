@@ -1,0 +1,171 @@
+/* fretboard.css — Mtheory Fretboard component (Content Engine widget)
+ * Dark-theme native; mirrors the keyboard's color/shape chip standard. */
+
+.mf-fretboard {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.mf-grid {
+  display: flex;
+  flex-direction: column;
+  background: #241a12;
+  border: 1px solid #3a2a1c;
+  border-radius: var(--radius, 8px);
+  padding: 6px 10px 4px;
+}
+
+.mf-row {
+  display: flex;
+  align-items: stretch;
+  height: 34px;
+}
+
+/* String name on the left gutter. */
+.mf-string-label {
+  flex: 0 0 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #b7935f;
+}
+
+/* Each fret cell. The horizontal string line is drawn as a centered pseudo-line;
+   the fret wire is the cell's left border. */
+.mf-cell {
+  position: relative;
+  flex: 1 1 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-left: 2px solid #6b5436;        /* fret wire */
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.mf-cell::before {                        /* the string */
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1.5px;
+  background: #8a8a96;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+/* The open column (fret 0) sits left of the nut — no string line through it. */
+.mf-cell--open {
+  flex: 0 0 30px;
+  border-left: none;
+}
+.mf-cell--open::before { display: none; }
+/* The nut: thick bright wire at fret 1's left edge. */
+.mf-row .mf-cell:nth-child(3) { border-left-width: 4px; border-left-color: #cdbb9a; }
+
+.mf-cell:hover::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.mf-cell--active::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.30);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+/* Colored shape chip — same standard as the keyboard / dots elsewhere. */
+.mf-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  z-index: 2;
+  pointer-events: none;
+}
+.mf-dot--circle { border-radius: 50%; }
+.mf-dot--square { border-radius: 3px; }
+.mf-dot--ref { opacity: 0.42; }
+.mf-dot--hi { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); }
+/* Sticky pin placed by the user in a fill drill. */
+.mf-dot--found { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.75), 0 1px 3px rgba(0,0,0,0.5); }
+
+/* Fret-number strip + inlay dots. */
+.mf-fretnums {
+  display: flex;
+  height: 18px;
+  margin-top: 2px;
+}
+.mf-fretnum {
+  position: relative;
+  flex: 1 1 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8a6e48;
+}
+.mf-fretnum:first-of-type { /* open column width match */ }
+.mf-fretnum--inlay::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #6b5436;
+  transform: translateX(-50%);
+}
+
+/* Quiz feedback flashes (used by Recall). */
+.mf-cell--right::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--success, #00ba35);
+  transform: translate(-50%, -50%);
+}
+.mf-cell--wrong::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--error, #ee0043);
+  transform: translate(-50%, -50%);
+}

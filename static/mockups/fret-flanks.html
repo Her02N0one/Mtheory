@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fretboard Flank Variations</title>
+<style>
+:root {
+  --bg:      #0d0d1a;
+  --card:    #1a1a2e;
+  --border:  #2a2a4a;
+  --text:    #e8e8f0;
+  --muted:   #7777aa;
+  --accent:  #5555ff;
+  --success: #00ba35;
+  --warn:    #ffb700;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+h1 { font-size: 1rem; color: var(--muted); margin-bottom: 0.25rem; }
+.lbl {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+.concept { border: 1px solid #3a3a5a; border-radius: 10px; padding: 1rem; }
+.concept-title { font-size: 0.9rem; font-weight: 700; color: #c9b8ff; margin-bottom: 0.15rem; }
+.concept-desc  { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.9rem; }
+
+/* ── Placeholder primitives ─────────────────────────────────── */
+.ph {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.68rem;
+  text-align: center;
+  padding: 0.25rem 0.4rem;
+  line-height: 1.3;
+}
+.ph-hdr    { height: 36px; background: #14142a; }
+.ph-prog   { height: 50px; }
+.ph-card   { height: 80px; background: #1e1e38; border-color: #4444aa; }
+.ph-mic    { height: 70px; }
+.ph-det    { height: 44px; }
+.ph-queue  { height: 28px; }
+.ph-fret   { background: #12122a; border-color: #3a3a7a; }
+.ph-circle { background: #1a2a1a; border-color: #2a5a2a; border-radius: 50%; flex-shrink: 0; }
+.ph-diag   { background: #1e1826; border-color: #4a2a6a; }
+.ph-text   { background: transparent; border-color: #2a2a4a; }
+
+/* ── Shared top section (same for all) ──────────────────────── */
+.top-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+.top-left  { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.top-right { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; width: 150px; }
+
+
+/* ══════════════════════════════════════════════════════════
+   VAR 1 — Both flanks equal: CoF left, intervals right
+══════════════════════════════════════════════════════════ */
+.v1-body {
+  display: grid;
+  grid-template-columns: 140px 1fr 140px;
+  gap: 8px;
+  align-items: start;
+}
+.v1-left  { display: flex; flex-direction: column; gap: 6px; }
+.v1-right { display: flex; flex-direction: column; gap: 6px; }
+.v1-fret  { display: flex; flex-direction: column; gap: 6px; }
+
+
+/* ══════════════════════════════════════════════════════════
+   VAR 2 — Narrow left (CoF only), wide right (intervals + text)
+══════════════════════════════════════════════════════════ */
+.v2-body {
+  display: grid;
+  grid-template-columns: 110px 1fr 200px;
+  gap: 8px;
+  align-items: start;
+}
+.v2-left  { display: flex; flex-direction: column; gap: 6px; }
+.v2-right { display: flex; flex-direction: column; gap: 6px; }
+
+
+/* ══════════════════════════════════════════════════════════
+   VAR 3 — Left flank only: CoF + degree + intervals stacked
+          Fretboard takes remaining 2/3
+══════════════════════════════════════════════════════════ */
+.v3-body {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+.v3-left  { display: flex; flex-direction: column; gap: 6px; }
+
+
+/* ══════════════════════════════════════════════════════════
+   VAR 4 — Right flank only: intervals get full tall column
+          Fretboard takes remaining 2/3
+══════════════════════════════════════════════════════════ */
+.v4-body {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 8px;
+  align-items: start;
+}
+.v4-left  { display: flex; flex-direction: column; gap: 6px; }
+.v4-right { display: flex; flex-direction: column; gap: 6px; }
+
+
+/* ══════════════════════════════════════════════════════════
+   VAR 5 — Asymmetric: small CoF top-left of fretboard,
+           intervals panel right (wider)
+══════════════════════════════════════════════════════════ */
+.v5-body {
+  display: grid;
+  grid-template-columns: 1fr 240px;
+  gap: 8px;
+  align-items: start;
+}
+.v5-fret-col { display: flex; flex-direction: column; gap: 6px; }
+.v5-fret-top { display: flex; gap: 8px; align-items: flex-start; }
+.v5-cof-stack { display: flex; flex-direction: column; gap: 5px; flex-shrink: 0; width: 100px; }
+.v5-right { display: flex; flex-direction: column; gap: 6px; }
+</style>
+</head>
+<body>
+
+<h1>Fretboard Flank Variations — theory in the side margins</h1>
+<p style="font-size:0.72rem;color:var(--muted);margin-bottom:0.5rem">Top action row (progress+card left, mic+detection right) is identical in all variants. Only the fretboard flanks change.</p>
+
+<!-- ══ VAR 1 ═══════════════════════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-title">1 — Both flanks equal: CoF left · interval diagrams right</div>
+  <div class="concept-desc">Symmetric. Circle of Fifths + degree text on the left. Interval diagrams fill the right. Fretboard in the middle takes ~60% of width.</div>
+
+  <!-- shared top -->
+  <div class="top-row">
+    <div class="top-left">
+      <div class="ph ph-prog">Progress / phase / pattern buttons</div>
+      <div class="ph ph-card">TARGET: G#4 on B string &nbsp; ▶ Hear it<br><small>Find this note · open position</small></div>
+    </div>
+    <div class="top-right">
+      <div class="ph ph-mic">Mic<br>Start Listening</div>
+      <div class="ph ph-det">Detected: G#4 ✓</div>
+    </div>
+  </div>
+  <div class="ph ph-queue" style="margin-bottom:8px">Queue strip</div>
+
+  <div class="v1-body">
+    <div class="v1-left">
+      <div class="lbl">Theory</div>
+      <div class="ph ph-circle" style="width:110px;height:110px;margin:0 auto"></div>
+      <div class="ph ph-text" style="height:18px">C³ → E³ · Major 3rd</div>
+      <div class="ph ph-text" style="height:14px;font-size:0.62rem">↑ Ascending scale</div>
+      <div class="ph ph-text" style="height:14px;font-size:0.62rem">Step by step root→octave</div>
+    </div>
+    <div class="v1-fret">
+      <div class="ph ph-fret" style="height:180px">Fretboard SVG</div>
+    </div>
+    <div class="v1-right">
+      <div class="lbl">Interval shapes</div>
+      <div class="ph ph-diag" style="flex:1;min-height:180px">Interval diagrams<br>(full column height)</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ VAR 2 ═══════════════════════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-title">2 — Narrow CoF left · wide theory+diagrams right</div>
+  <div class="concept-desc">Left flank is just the circle (no text). Right flank is wider and holds both degree/motion text AND the interval diagrams stacked.</div>
+
+  <div class="top-row">
+    <div class="top-left">
+      <div class="ph ph-prog">Progress / phase / pattern buttons</div>
+      <div class="ph ph-card">TARGET: G#4 on B string &nbsp; ▶ Hear it</div>
+    </div>
+    <div class="top-right">
+      <div class="ph ph-mic">Mic<br>Start Listening</div>
+      <div class="ph ph-det">Detected: G#4 ✓</div>
+    </div>
+  </div>
+  <div class="ph ph-queue" style="margin-bottom:8px">Queue strip</div>
+
+  <div class="v2-body">
+    <div class="v2-left">
+      <div class="ph ph-circle" style="width:90px;height:90px;margin:0 auto"></div>
+      <div class="ph" style="height:14px;font-size:0.6rem;margin-top:4px">Circle of Fifths</div>
+    </div>
+    <div class="ph ph-fret" style="height:180px">Fretboard SVG</div>
+    <div class="v2-right">
+      <div class="ph ph-text" style="height:20px">C³ → E³ · <strong>Major 3rd</strong></div>
+      <div class="ph ph-text" style="height:14px;font-size:0.62rem">↑ Ascending scale</div>
+      <div class="ph ph-diag" style="flex:1;min-height:130px">Interval diagrams</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ VAR 3 ═══════════════════════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-title">3 — Left flank only: CoF + degree + diagrams stacked · fretboard takes 2/3</div>
+  <div class="concept-desc">All theory lives in a left panel. Fretboard gets most of the width. Right side is empty (or could hold print/settings controls).</div>
+
+  <div class="top-row">
+    <div class="top-left">
+      <div class="ph ph-prog">Progress / phase / pattern buttons</div>
+      <div class="ph ph-card">TARGET: G#4 on B string &nbsp; ▶ Hear it</div>
+    </div>
+    <div class="top-right">
+      <div class="ph ph-mic">Mic<br>Start Listening</div>
+      <div class="ph ph-det">Detected: G#4 ✓</div>
+    </div>
+  </div>
+  <div class="ph ph-queue" style="margin-bottom:8px">Queue strip</div>
+
+  <div class="v3-body">
+    <div class="v3-left">
+      <div class="lbl">Theory</div>
+      <div class="ph ph-circle" style="width:120px;height:120px;margin:0 auto"></div>
+      <div class="ph ph-text" style="height:20px">C³ → E³ · <strong>Major 3rd</strong></div>
+      <div class="ph ph-text" style="height:14px;font-size:0.62rem">↑ Ascending scale</div>
+      <div class="ph ph-diag" style="flex:1;min-height:100px;margin-top:4px">Interval diagrams</div>
+    </div>
+    <div class="ph ph-fret" style="height:260px">Fretboard SVG</div>
+  </div>
+</div>
+
+
+<!-- ══ VAR 4 ═══════════════════════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-title">4 — Right flank only: intervals get full tall column · CoF moves into note card area</div>
+  <div class="concept-desc">CoF is a small badge inline with the degree label (top-left of the fretboard column). Right panel is entirely interval diagrams — tall, no competition.</div>
+
+  <div class="top-row">
+    <div class="top-left">
+      <div class="ph ph-prog">Progress / phase / pattern buttons</div>
+      <div class="ph ph-card">TARGET: G#4 on B string &nbsp; ▶ Hear it</div>
+    </div>
+    <div class="top-right">
+      <div class="ph ph-mic">Mic<br>Start Listening</div>
+      <div class="ph ph-det">Detected: G#4 ✓</div>
+    </div>
+  </div>
+  <div class="ph ph-queue" style="margin-bottom:8px">Queue strip</div>
+
+  <div class="v4-body">
+    <div class="v4-left">
+      <!-- small CoF + label above fretboard -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div class="ph ph-circle" style="width:48px;height:48px;flex-shrink:0"></div>
+        <div style="display:flex;flex-direction:column;gap:3px;flex:1">
+          <div class="ph ph-text" style="height:18px">C³ → E³ · <strong>Major 3rd</strong></div>
+          <div class="ph ph-text" style="height:14px;font-size:0.62rem">↑ Ascending scale · step by step</div>
+        </div>
+      </div>
+      <div class="ph ph-fret" style="height:200px">Fretboard SVG</div>
+    </div>
+    <div class="v4-right">
+      <div class="lbl">Interval shapes</div>
+      <div class="ph ph-diag" style="flex:1;min-height:260px">Interval diagrams<br>(full panel height,<br>no circle competing)</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ VAR 5 ═══════════════════════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-title">5 — CoF embedded top-left of fretboard · intervals right panel</div>
+  <div class="concept-desc">No separate left column. The CoF sits as an overlay/inset at the top-left corner of the fretboard SVG area (the neck starts at fret 1, leaving space at the left). Right panel is full-height intervals.</div>
+
+  <div class="top-row">
+    <div class="top-left">
+      <div class="ph ph-prog">Progress / phase / pattern buttons</div>
+      <div class="ph ph-card">TARGET: G#4 on B string &nbsp; ▶ Hear it</div>
+    </div>
+    <div class="top-right">
+      <div class="ph ph-mic">Mic<br>Start Listening</div>
+      <div class="ph ph-det">Detected: G#4 ✓</div>
+    </div>
+  </div>
+  <div class="ph ph-queue" style="margin-bottom:8px">Queue strip</div>
+
+  <div class="v5-body">
+    <div class="v5-fret-col">
+      <div class="v5-fret-top">
+        <div class="v5-cof-stack">
+          <div class="ph ph-circle" style="width:90px;height:90px"></div>
+          <div class="ph ph-text" style="height:16px;font-size:0.62rem">Circle of Fifths</div>
+          <div class="ph ph-text" style="height:16px">Major 3rd</div>
+          <div class="ph ph-text" style="height:14px;font-size:0.6rem">↑ Ascending</div>
+        </div>
+        <!-- rest of fret top is fretboard start -->
+        <div class="ph ph-fret" style="flex:1;height:90px;font-size:0.65rem">← fretboard continues right (headstock area)</div>
+      </div>
+      <div class="ph ph-fret" style="height:120px">Fretboard SVG (main body)</div>
+    </div>
+    <div class="v5-right">
+      <div class="lbl">Interval shapes</div>
+      <div class="ph ph-diag" style="flex:1;min-height:240px">Interval diagrams<br>(widest possible,<br>full right column)</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

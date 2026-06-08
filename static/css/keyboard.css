@@ -1,0 +1,134 @@
+/* keyboard.css — Mtheory Keyboard component (Phase 1) */
+
+.mk-keyboard {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+/* White keys form the horizontal layout grid. */
+.mk-white-row {
+  display: flex;
+  width: 100%;
+  height: 180px;
+}
+
+.mk-key {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.mk-key--white {
+  flex: 1 1 0;
+  background: #fafafa;
+  border: 1px solid #cfcfd6;
+  border-radius: 0 0 5px 5px;
+  box-shadow: inset 0 -6px 0 rgba(0, 0, 0, 0.06);
+}
+
+.mk-key--white:hover {
+  background: #f0f0f4;
+}
+
+/* Black keys float above the white row. */
+.mk-black-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 0; /* children are absolutely positioned */
+  pointer-events: none;
+}
+
+.mk-key--black {
+  position: absolute;
+  top: 0;
+  width: var(--mk-black-w, 4.2%);
+  height: 110px;
+  transform: translateX(-50%);
+  background: linear-gradient(#2c2c34, #14141a);
+  border: 1px solid #000;
+  border-radius: 0 0 4px 4px;
+  box-shadow: inset 0 -5px 0 rgba(255, 255, 255, 0.08);
+  pointer-events: auto;
+  z-index: 2;
+}
+
+.mk-key--black:hover {
+  background: linear-gradient(#3a3a44, #1d1d24);
+}
+
+/* Pressed state. */
+.mk-key--active.mk-key--white {
+  background: #e3e3ea;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.1);
+}
+.mk-key--active.mk-key--black {
+  background: linear-gradient(#43434f, #24242c);
+  height: 108px;
+}
+
+/* Highlight (author-placed "press this" target) — uses the note's own
+   standard color via the --mk-note-color custom property. */
+.mk-key--highlight.mk-key--white {
+  background: color-mix(in srgb, var(--mk-note-color, #f0b400) 22%, #fafafa);
+  box-shadow: inset 0 0 0 2.5px var(--mk-note-color, #f0b400),
+              inset 0 -6px 0 rgba(0, 0, 0, 0.06);
+}
+.mk-key--highlight.mk-key--black {
+  background: color-mix(in srgb, var(--mk-note-color, #f0b400) 55%, #14141a);
+  box-shadow: inset 0 0 0 2.5px var(--mk-note-color, #f0b400);
+}
+
+/* Quiz mode hides the marker chip (answer hidden). */
+.mk-key--quiz .mk-marker {
+  visibility: hidden;
+}
+
+/* Colored shape markers — same color/shape standard as the fretboard dots. */
+.mk-marker {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+.mk-marker--circle { border-radius: 50%; }
+.mk-marker--square { border-radius: 3px; }
+
+/* Black-key markers match the white-key chip size so the row reads uniformly;
+   only the vertical offset changes since black keys are shorter. */
+.mk-key--black .mk-marker {
+  bottom: 12px;
+}
+
+/* Octave register number, under each C. */
+.mk-reg {
+  position: absolute;
+  bottom: 34px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  color: #8a8a96;
+  pointer-events: none;
+}

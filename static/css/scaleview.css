@@ -1,0 +1,108 @@
+/* =========================================================================
+   ScaleView (msv-*) — Staff-based scale visualisation
+   ========================================================================= */
+.msv-wrap {
+  width: 100%;
+  background: var(--bg-card, #1a1a2e);
+  border: 1px solid var(--border, #2a2a4a);
+  border-radius: var(--radius-lg, 14px);
+  padding: 10px 14px;
+  overflow-x: auto;
+}
+
+/* Staff lines & Noteheads */
+.ms-line { stroke: var(--muted, #7777aa); stroke-width: 1.2; }
+.ms-head { fill: var(--text, #e8e8f0); }
+.ms-note--hi { stroke: #fff; stroke-width: 2; }
+
+/* Scale Degree Numbers & Hats */
+.msv-degree {
+  fill: var(--text, #e8e8f0);
+  font-size: 11px;
+  font-weight: 700;
+  dominant-baseline: alphabetic;
+}
+.msv-degree-hat {
+  fill: var(--muted, #7777aa);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* Triangle V-Lines & Brackets */
+.msv-tri {
+  stroke: var(--muted, #7777aa);
+  stroke-width: 1.2px;
+  opacity: 0.6;
+}
+.msv-step-line {
+  stroke: var(--muted, #7777aa);
+  stroke-width: 2px;
+}
+.msv-step-line--half {
+  stroke: var(--warn, #ffb700);
+}
+.msv-step-label {
+  font-size: 12px;
+  font-weight: 700;
+  fill: var(--muted, #7777aa);
+}
+.msv-step-label--half {
+  fill: var(--warn, #ffb700);
+}
+
+/* Tetrachord brackets */
+.msv-tetch-line {
+  stroke: var(--accent, #5555ff);
+  stroke-width: 1.5px;
+}
+.msv-tetch-label {
+  fill: var(--accent, #5555ff);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* =========================================================================
+   ChromaCircle (mcc-*) — Circular pitch visualisation
+   ========================================================================= */
+.mcc-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg-card, #1a1a2e);
+  border: 1px solid var(--border, #2a2a4a);
+  border-radius: var(--radius-lg, 14px);
+  padding: 10px;
+}
+.mcc-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.mcc-label {
+  font-size: 16px;
+  font-weight: 700;
+  pointer-events: none;
+}
+.mcc-arc {
+  stroke: var(--warn, #ffb700);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+.mcc-arc-label {
+  fill: var(--warn, #ffb700);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* =========================================================================
+   StepView Compound Layout
+   ========================================================================= */
+.mte-stepview {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.mte-stepview__circle { flex: 0 0 260px; }
+.mte-stepview__kbwrap { flex: 1 1 240px; }

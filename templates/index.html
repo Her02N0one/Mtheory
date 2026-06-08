@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Chromatic Fretboard Theory Trainer{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <h1>Chromatic Fretboard<br>Theory Trainer</h1>
+  <p>Guitar theory through color, shape, and sound.</p>
+
+  <div class="cof-strip">
+    {% for note, data in note_system.items() %}
+    <div class="cof-chip {{ data.shape }}" style="background:{{ data.color }}" title="{{ note }}">
+      <span>{{ note }}</span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="card-grid">
+    <a href="/fretboard" class="card">
+      <h2>Fretboard Diagrams</h2>
+      <p>Generate high-resolution SVG diagrams with the chromatic color system.
+         Highlight any scale, chord, or set of notes across the full neck.</p>
+      <span class="card-cta">Open Diagram Generator →</span>
+    </a>
+    <a href="/trainer" class="card">
+      <h2>Theory Trainer</h2>
+      <p>Answer interval and chord questions in real time. Plug in your guitar
+         and let the microphone validate your answers instantly.</p>
+      <span class="card-cta">Start Training →</span>
+    </a>
+  </div>
+</div>
+{% endblock %}

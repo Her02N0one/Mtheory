@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Content Engine — loop test</title>
+  <link rel="stylesheet" href="css/keyboard.css?v=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; background: #1b1b22; color: #e7e7ee;
+           margin: 0; padding: 32px; }
+    .mte-lesson { max-width: 920px; margin: 0 auto; }
+    .mte-md h1 { font-size: 22px; } .mte-md h2 { font-size: 18px; }
+    .mte-md p { line-height: 1.5; color: #c7c7d2; }
+    .mte-widget { margin: 22px 0; }
+    .mte-when { border-left: 3px solid #6fd08c; padding-left: 14px; margin-top: 18px; }
+    .mte-button { background: #2b7; color: #06210f; border: none; border-radius: 6px;
+                  padding: 8px 16px; font: inherit; font-weight: 600; cursor: pointer; }
+    #status { max-width: 920px; margin: 0 auto 18px; font-family: ui-monospace,
+              monospace; font-size: 12px; color: #8a8a96; }
+  </style>
+</head>
+<body>
+  <div id="status">flags: {}</div>
+  <div id="root"></div>
+
+  <script src="js/components/keyboard.js?v=1"></script>
+  <script src="js/engine/engine.js?v=1"></script>
+  <script>
+    // Inline-compiled equivalent of lessons/_smoke/keyboard.md
+    // (what app/lesson_dsl.py emits). Mirrors that file so this page tests the
+    // runtime loop without needing a server route yet.
+    const lesson = {
+      id: "smoke.1",
+      title: "Keyboard → Flag Loop",
+      blocks: [
+        { id: "b1", type: "markdown",
+          content: "# Engine smoke test\n\nPress the highlighted **C** (C4, middle C)." },
+        { id: "b2", type: "widget", widget: "keyboard",
+          props: { octaves: 3, startOctave: 3, highlight: "C4", labels: "naturals" } },
+        { id: "b3", type: "listen", waitFor: "note_played",
+          where: "note == C4", then: { set_flag: "c_pressed" }, blocking: true },
+        { id: "b4", type: "when", flag: "c_pressed", children: [
+          { id: "b4a", type: "markdown",
+            content: "Nice — that was **C4**. The event fired, the flag flipped, and this block appeared. The engine loop works end to end." },
+          { id: "b4b", type: "button", label: "Finish →", action: { complete: true } },
+        ]},
+      ],
+    };
+
+    const eng = MtheoryEngine.run(lesson, "#root");
+    const statusEl = document.getElementById("status");
+    const root = document.getElementById("root");
+    function refreshStatus() { statusEl.textContent = "flags: " + JSON.stringify(eng.flags); }
+    root.addEventListener("mtheory:note_played", refreshStatus);
+    root.addEventListener("mte:complete", () => {
+      statusEl.textContent += "  — LESSON COMPLETE";
+    });
+  </script>
+</body>
+</html>

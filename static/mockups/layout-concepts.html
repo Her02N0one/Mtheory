@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Layout Concepts — Mtheory</title>
+<style>
+:root {
+  --bg:      #0d0d1a;
+  --card:    #1a1a2e;
+  --border:  #2a2a4a;
+  --text:    #e8e8f0;
+  --muted:   #7777aa;
+  --accent:  #5555ff;
+  --success: #00ba35;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+h1 { font-size: 1.1rem; color: var(--muted); margin-bottom: 0.4rem; }
+.label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+.concept { border: 1px solid #3a3a5a; border-radius: 12px; padding: 1rem; }
+.concept-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #c9b8ff;
+  margin-bottom: 0.2rem;
+}
+.concept-desc { font-size: 0.78rem; color: var(--muted); margin-bottom: 1rem; }
+
+/* ── Placeholder blocks ───────────────────────────── */
+.ph {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-align: center;
+  padding: 0.3rem;
+}
+.ph-header   { height: 42px; background: #16162a; }
+.ph-prog     { height: 34px; }
+.ph-notecard { height: 80px; background: #1e1e38; border: 1px solid #4444aa; }
+.ph-mic      { height: 56px; }
+.ph-detect   { height: 42px; }
+.ph-fret     { background: #12122a; border-color: #3a3a7a; }
+.ph-circle   { background: #1a2a1a; border-color: #2a4a2a; width: 90px; height: 90px; border-radius: 50%; flex-shrink: 0; }
+.ph-theory-text { height: 90px; flex: 1; }
+.ph-diagrams { background: #1e1826; border-color: #4a2a6a; }
+.ph-queue    { height: 30px; background: #1a1a1a; }
+
+
+/* ══════════════════════════════════════════════
+   CONCEPT A — Current (baseline)
+══════════════════════════════════════════════ */
+.a-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 680px;
+}
+.a-theory-row { display: flex; gap: 10px; align-items: flex-start; }
+.a-theory-text { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+
+
+/* ══════════════════════════════════════════════
+   CONCEPT B — HUD top bar, fretboard dominant
+══════════════════════════════════════════════ */
+.b-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 860px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.b-hud {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #14142a;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+.b-hud-left  { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+.b-hud-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.b-main {
+  display: flex;
+  gap: 0;
+}
+.b-fret-col {
+  flex: 1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-right: 1px solid var(--border);
+}
+.b-theory-col {
+  width: 220px;
+  flex-shrink: 0;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+
+/* ══════════════════════════════════════════════
+   CONCEPT C — Split: left controls, right canvas
+══════════════════════════════════════════════ */
+.c-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-width: 960px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.c-header {
+  padding: 8px 14px;
+  background: #14142a;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.c-body { display: flex; }
+.c-left {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.c-right {
+  flex: 1;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.c-theory-row { display: flex; gap: 8px; }
+.c-circle-sm  { width: 70px; height: 70px; flex-shrink: 0; }
+
+
+/* ══════════════════════════════════════════════
+   CONCEPT D — Fretboard full-width, theory below in 2 cols
+══════════════════════════════════════════════ */
+.d-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 860px;
+}
+.d-top-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.d-prog-note { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.d-mic-detect { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.d-bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.d-theory-left  { display: flex; flex-direction: column; gap: 8px; }
+.d-theory-right { display: flex; flex-direction: column; gap: 8px; }
+</style>
+</head>
+<body>
+
+<h1>Mtheory — Layout Proof of Concepts</h1>
+
+<!-- ══ CONCEPT A ══════════════════════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-title">A — Current baseline (single column)</div>
+  <div class="concept-desc">Everything stacked. Theory panel at bottom, diagram inside theory. Diagrams are narrow because they're in a column next to the circle.</div>
+  <div class="a-layout">
+    <div class="ph ph-header">← Path &nbsp;|&nbsp; Stage Title &nbsp;|&nbsp; 0 correct</div>
+    <div class="ph ph-prog">Progress bar + phase banner</div>
+    <div class="ph ph-queue">Queue strip (look-ahead notes)</div>
+    <div class="ph ph-notecard">TARGET NOTE CARD<br><small>Play: G#4 on B string</small></div>
+    <div class="ph ph-mic">Mic controls + Start Listening</div>
+    <div class="ph ph-detect">Detected: G#4 ✓</div>
+    <div class="ph ph-fret" style="height:130px">Fretboard SVG</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px;">
+      <div class="label">Theory panel</div>
+      <div class="a-theory-row">
+        <div class="ph ph-circle"></div>
+        <div class="a-theory-text">
+          <div class="ph" style="height:26px">Degree / motion label</div>
+          <div class="ph" style="height:20px">Desc</div>
+          <div class="ph ph-diagrams" style="height:80px">Interval diagrams — squeezed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ CONCEPT B ══════════════════════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-title">B — Sticky HUD top, fretboard + theory side-by-side</div>
+  <div class="concept-desc">Compact top bar holds the note card + detection. Below: fretboard on left, theory column (circle, labels, diagrams) on right. Diagrams get full column height.</div>
+  <div class="b-layout">
+    <!-- HUD top bar -->
+    <div class="b-hud">
+      <div class="b-hud-left">
+        <div class="ph ph-prog" style="height:22px">Progress / phase</div>
+        <div class="ph ph-notecard" style="height:44px;background:#1e1e38;border-color:#4444aa">TARGET: G#4 on B string &nbsp;▶ Hear it</div>
+      </div>
+      <div class="b-hud-right">
+        <div class="ph ph-mic" style="height:64px;width:130px">Mic<br>Start Listening</div>
+        <div class="ph ph-detect" style="height:64px;width:100px">Detected<br>G#4 ✓</div>
+      </div>
+    </div>
+    <!-- Body -->
+    <div class="b-main">
+      <div class="b-fret-col">
+        <div class="ph ph-queue">Queue strip</div>
+        <div class="ph ph-fret" style="height:200px">Fretboard SVG</div>
+      </div>
+      <div class="b-theory-col">
+        <div class="label">Theory</div>
+        <div class="ph ph-circle" style="width:80px;height:80px;margin:0 auto"></div>
+        <div class="ph" style="height:22px">Degree label</div>
+        <div class="ph" style="height:16px;font-size:0.65rem">Motion / desc</div>
+        <div class="ph ph-diagrams" style="flex:1;min-height:100px">Interval diagrams<br>(full column width)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ CONCEPT C ══════════════════════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-title">C — Left sidebar controls, right canvas + theory</div>
+  <div class="concept-desc">Left panel holds all interaction (note card, mic, detection, progress). Right side is purely visual: fretboard on top, full-width theory + diagrams below.</div>
+  <div class="c-layout">
+    <div class="c-header">
+      <div class="ph" style="height:28px;width:60px">← Path</div>
+      <div class="ph" style="height:28px;flex:1">Stage Title</div>
+      <div class="ph" style="height:28px;width:80px">0 correct</div>
+    </div>
+    <div class="c-body">
+      <!-- Left sidebar -->
+      <div class="c-left">
+        <div class="label">Target</div>
+        <div class="ph ph-notecard" style="height:80px;background:#1e1e38;border-color:#4444aa">Play: G#4<br>B string, fret 9<br>▶ Hear it</div>
+        <div class="ph ph-mic" style="height:54px">Mic / Start Listening</div>
+        <div class="ph ph-detect" style="height:40px">Detected: G#4 ✓</div>
+        <div class="ph ph-prog" style="height:24px;margin-top:auto">Progress</div>
+        <div class="ph ph-queue" style="height:28px">Queue</div>
+      </div>
+      <!-- Right canvas -->
+      <div class="c-right">
+        <div class="ph ph-fret" style="height:200px">Fretboard SVG</div>
+        <div class="c-theory-row">
+          <div class="ph ph-circle c-circle-sm"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px">
+            <div class="ph" style="height:22px">Degree / motion</div>
+            <div class="ph ph-diagrams" style="flex:1;min-height:60px">Interval diagrams — full right-panel width</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ CONCEPT D ══════════════════════════════════════════════════════════ -->
+<div class="concept">
+  <div class="concept-title">D — Fretboard dominant, theory below in 2-column grid</div>
+  <div class="concept-desc">Header + compact action row at top. Fretboard full-width. Below it: theory splits into two equal columns — circle+text on left, interval diagrams on right (full half-width).</div>
+  <div class="d-layout">
+    <div class="ph ph-header">← Path &nbsp;|&nbsp; Stage Title &nbsp;|&nbsp; 0 correct</div>
+    <div class="d-top-row">
+      <div class="d-prog-note">
+        <div class="ph ph-prog" style="height:22px">Progress / phase</div>
+        <div class="ph ph-notecard" style="height:52px;background:#1e1e38;border-color:#4444aa">TARGET: G#4 on B string &nbsp;▶ Hear it</div>
+      </div>
+      <div class="d-mic-detect">
+        <div class="ph ph-mic" style="height:78px;width:120px">Mic<br>Start Listening</div>
+        <div class="ph ph-detect" style="height:78px;width:90px;font-size:1.2rem">G#4<br>✓</div>
+      </div>
+    </div>
+    <div class="ph ph-queue">Queue strip</div>
+    <div class="ph ph-fret" style="height:170px">Fretboard SVG — full width</div>
+    <div class="d-bottom-row">
+      <div class="d-theory-left">
+        <div class="label">Theory</div>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <div class="ph ph-circle" style="width:70px;height:70px;flex-shrink:0"></div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px">
+            <div class="ph" style="height:22px">Degree</div>
+            <div class="ph" style="height:18px">Motion</div>
+            <div class="ph" style="height:16px">Desc</div>
+          </div>
+        </div>
+      </div>
+      <div class="d-theory-right">
+        <div class="label">Interval shapes</div>
+        <div class="ph ph-diagrams" style="flex:1;min-height:110px">Interval diagrams<br>half-page width</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

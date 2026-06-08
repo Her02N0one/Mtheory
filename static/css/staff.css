@@ -1,0 +1,88 @@
+/* staff.css — Mtheory Staff component (treble-clef notation widget) */
+
+.ms-staff {
+  width: 100%;
+  background: var(--bg-card, #1a1a2e);
+  border: 1px solid var(--border, #2a2a4a);
+  border-radius: var(--radius-lg, 14px);
+  padding: 10px 14px;
+  overflow-x: auto;
+}
+
+.ms-svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Staff lines + ledger lines. */
+.ms-line,
+.ms-ledger {
+  stroke: #c8c8e0;
+  stroke-width: 1.1;
+  shape-rendering: crispEdges;
+}
+.ms-ledger { stroke-width: 1.3; }
+
+/* Treble clef glyph. */
+.ms-clef-glyph {
+  fill: var(--text, #e8e8f0);
+  font-family: "Bravura", "Segoe UI Symbol", "Noto Music", serif;
+  dominant-baseline: alphabetic;
+}
+/* "8" subscript on the guitar (8vb) clef. */
+.ms-clef-8 {
+  fill: var(--text, #e8e8f0);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  dominant-baseline: alphabetic;
+}
+
+/* Noteheads. */
+.ms-head {
+  stroke-width: 0.8;
+}
+.ms-note--play {
+  cursor: pointer;
+}
+.ms-note--play .ms-head {
+  transition: transform 0.08s ease;
+}
+.ms-note--play:hover .ms-head {
+  filter: brightness(1.25);
+}
+.ms-note--active .ms-head {
+  filter: brightness(1.5);
+}
+
+/* Highlighted note (companion sync): a white ring around the head. */
+.ms-note--hi .ms-head {
+  stroke: #ffffff;
+  stroke-width: 2.2;
+}
+
+/* Right / wrong flashes. */
+.ms-note--right .ms-head { stroke: var(--success, #00ba35); stroke-width: 2.4; }
+.ms-note--wrong .ms-head { stroke: var(--error, #ee0043); stroke-width: 2.4; }
+
+/* Accidental + note-name labels. */
+.ms-acc {
+  fill: var(--text, #e8e8f0);
+  font-size: 15px;
+  font-family: "Segoe UI Symbol", system-ui, sans-serif;
+}
+.ms-label {
+  font-size: 10px;
+  font-weight: 600;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  fill: var(--muted, #7777aa);
+}
+
+/* Grand staff — barline connecting the two staves on the left. */
+.ms-barline {
+  stroke: var(--text, #e8e8f0);
+  stroke-width: 1.5;
+  shape-rendering: crispEdges;
+}
+
+/* Bass clef glyph inherits .ms-clef-glyph styles; override size via font-size attr. */

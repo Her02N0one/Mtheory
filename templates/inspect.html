@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Curriculum Inspector{% endblock %}
+
+{% block head %}
+<style>
+.inspect-page { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+.inspect-hero { margin-bottom: 2rem; }
+.inspect-hero h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 0.25rem; }
+.inspect-hero p  { color: var(--muted); font-size: 0.88rem; margin: 0; }
+
+/* Track sections */
+.track-section { margin-bottom: 2.5rem; }
+.track-heading { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+                 text-transform: uppercase; color: var(--muted);
+                 border-bottom: 1px solid var(--border); padding-bottom: 0.35rem;
+                 margin-bottom: 0.75rem; }
+
+/* Stage rows */
+.is-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.is-table th { text-align: left; padding: 0.3rem 0.6rem; font-size: 0.65rem;
+               font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+               color: var(--muted); border-bottom: 1px solid var(--border); }
+.is-table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+               vertical-align: top; }
+.is-table tr:last-child td { border-bottom: none; }
+.is-table tr:hover td { background: rgba(255,255,255,0.025); }
+
+.is-id     { font-family: monospace; font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+.is-title  { font-weight: 600; white-space: nowrap; }
+.is-title a{ color: inherit; text-decoration: none; }
+.is-title a:hover { text-decoration: underline; }
+.is-sub    { font-size: 0.75rem; color: var(--muted); }
+
+.note-dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px;
+            margin-right: 2px; vertical-align: middle; }
+.note-dot-ci { border-radius: 50%; }
+
+.is-phases { text-align: right; white-space: nowrap; }
+.badge-count { display: inline-block; background: rgba(255,255,255,0.07);
+               border-radius: 4px; padding: 1px 6px; font-size: 0.72rem;
+               font-family: monospace; }
+.badge-pat { display: inline-block; background: rgba(255,255,255,0.06);
+             border-radius: 3px; padding: 1px 5px; font-size: 0.68rem;
+             color: var(--muted); margin: 1px 2px; white-space: nowrap; }
+
+.chain-ids { display: flex; flex-wrap: wrap; gap: 3px; }
+.chain-id  { font-family: monospace; font-size: 0.72rem; background: rgba(255,255,255,0.06);
+             border-radius: 3px; padding: 1px 5px; color: var(--muted); }
+.chain-id a{ color: inherit; text-decoration: none; }
+.chain-id a:hover { text-decoration: underline; }
+.is-start  { color: var(--muted); font-size: 0.72rem; font-style: italic; }
+
+.open-btn  { font-size: 0.72rem; padding: 3px 9px; white-space: nowrap; }
+
+/* DAG summary strip */
+.dag-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2rem; align-items: center; }
+.dag-node  { display: inline-flex; align-items: center; gap: 4px;
+             border: 1px solid var(--border); border-radius: 5px;
+             padding: 3px 8px; font-size: 0.73rem; }
+.dag-arrow { color: var(--muted); font-size: 0.8rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="inspect-page">
+
+  <div class="inspect-hero">
+    <h1>Curriculum Inspector</h1>
+    <p>{{ stages | length }} stages across {{ tracks | length }} tracks &nbsp;·&nbsp; read-only data view</p>
+  </div>
+
+  {% for track in tracks %}
+  <div class="track-section">
+    <div class="track-heading">{{ track.label }} &nbsp;· &nbsp;{{ track.stages | length }} stages</div>
+    <table class="is-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Stage</th>
+          <th>Notes</th>
+          <th style="text-align:right">Phases</th>
+          <th>Patterns used</th>
+          <th>Requires</th>
+          <th>Unlocks</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in track.stages %}
+        <tr>
+          <td class="is-id">{{ s.id }}</td>
+          <td>
+            <div class="is-title"><a href="/inspect/{{ s.id }}">{{ s.title }}</a></div>
+            <div class="is-sub">{{ s.subtitle }}</div>
+          </td>
+          <td>
+            {% for n in s.notes %}
+              <span class="note-dot {% if note_system[n].shape == 'circle' %}note-dot-ci{% endif %}"
+                    style="background:{{ note_system[n].color }}"
+                    title="{{ n }}"></span>
+            {% endfor %}
+          </td>
+          <td class="is-phases">
+            <span class="badge-count">{{ s.phases | length }}</span>
+          </td>
+          <td>
+            {% for pat in s._patterns %}
+              <span class="badge-pat">{{ pat }}</span>
+            {% endfor %}
+          </td>
+          <td>
+            {% if s.requires %}
+            <div class="chain-ids">
+              {% for r in s.requires %}<span class="chain-id"><a href="/inspect/{{ r }}">{{ r }}</a></span>{% endfor %}
+            </div>
+            {% else %}<span class="is-start">entry point</span>{% endif %}
+          </td>
+          <td>
+            {% if s.unlocks %}
+            <div class="chain-ids">
+              {% for u in s.unlocks %}<span class="chain-id"><a href="/inspect/{{ u }}">{{ u }}</a></span>{% endfor %}
+            </div>
+            {% else %}<span class="is-start">terminal</span>{% endif %}
+          </td>
+          <td>
+            <a href="/learn/{{ s.id }}" class="btn-primary open-btn">Open →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endfor %}
+
+</div>
+{% endblock %}

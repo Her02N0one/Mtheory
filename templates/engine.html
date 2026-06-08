@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Mtheory | {{ lesson_title }}{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="/static/css/keyboard.css?v=4">
+  <link rel="stylesheet" href="/static/css/fretboard.css?v=2">
+  <link rel="stylesheet" href="/static/css/staff.css?v=4">
+  <link rel="stylesheet" href="/static/css/scaleview.css?v=4">
+  <link rel="stylesheet" href="/static/css/engine.css?v=6">
+{% endblock %}
+
+{% block content %}
+  <div id="engine-root" class="mte-lesson"></div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="/static/js/components/keyboard.js?v=6"></script>
+  <script src="/static/js/components/fretboard.js?v=4"></script>
+  <script src="/static/js/components/staff.js?v=8"></script>
+  <script src="/static/js/components/scaleview.js?v=4"></script>
+  <script src="/static/js/components/chromacircle.js?v=8"></script>
+  <script src="/static/js/midi.js?v=1"></script>
+  <script src="/static/js/engine/engine.js?v=19"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // JSON block-tree compiled server-side by app/lesson_dsl.py.
+      // |safe so Jinja doesn't escape the quotes in the JSON literal.
+      const lessonData = {{ lesson_json | safe }};
+      const rootEl = document.getElementById("engine-root");
+
+      if (window.MtheoryEngine) {
+        window.MtheoryEngine.init(lessonData, rootEl);
+      } else {
+        console.error("MtheoryEngine failed to load.");
+        rootEl.textContent = "Engine failed to load. Check the console.";
+      }
+    });
+  </script>
+{% endblock %}

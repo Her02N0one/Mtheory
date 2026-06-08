@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}{{ stage.title }} · Inspector{% endblock %}
+
+{% block head %}
+<style>
+.isd-page { max-width: 960px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+/* breadcrumb */
+.isd-crumb { font-size: 0.78rem; color: var(--muted); margin-bottom: 1.25rem; }
+.isd-crumb a { color: var(--muted); text-decoration: none; }
+.isd-crumb a:hover { text-decoration: underline; }
+.isd-crumb span { margin: 0 0.4rem; }
+
+/* hero */
+.isd-hero { display: flex; align-items: flex-start; gap: 1.25rem; margin-bottom: 2rem; }
+.isd-icon  { width: 44px; height: 44px; border-radius: 8px; flex-shrink: 0;
+             display: flex; align-items: center; justify-content: center;
+             font-size: 1.4rem; }
+.isd-hero-text h1 { font-size: 1.45rem; font-weight: 800; margin: 0 0 0.2rem; }
+.isd-hero-text p  { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.6rem; }
+.isd-notes { display: flex; flex-wrap: wrap; gap: 4px; }
+.note-chip-sm { display: inline-block; border-radius: 4px; padding: 2px 7px;
+                font-size: 0.72rem; font-weight: 700; color: #000; }
+
+/* chain row */
+.isd-chain { display: flex; align-items: center; gap: 6px; margin-bottom: 2rem;
+             font-size: 0.8rem; flex-wrap: wrap; }
+.isd-chain-node { border: 1px solid var(--border); border-radius: 5px;
+                  padding: 3px 9px; white-space: nowrap; }
+.isd-chain-node.active { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.isd-chain-node a { color: inherit; text-decoration: none; }
+.isd-chain-node a:hover { text-decoration: underline; }
+.isd-chain-arrow { color: var(--muted); }
+
+/* stats row */
+.isd-stats { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.75rem; }
+.isd-stat  { background: var(--card-bg); border: 1px solid var(--border); border-radius: 6px;
+             padding: 0.5rem 0.9rem; }
+.isd-stat-val  { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+.isd-stat-lbl  { font-size: 0.65rem; color: var(--muted); text-transform: uppercase;
+                 letter-spacing: 0.08em; margin-top: 2px; }
+
+/* phases table */
+.isd-section-head { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.12em;
+                    text-transform: uppercase; color: var(--muted);
+                    border-bottom: 1px solid var(--border); padding-bottom: 0.35rem;
+                    margin: 2rem 0 0.75rem; }
+
+.ph-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.ph-table th { text-align: left; padding: 0.3rem 0.6rem; font-size: 0.65rem;
+               font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+               color: var(--muted); border-bottom: 1px solid var(--border); }
+.ph-table td { padding: 0.45rem 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.04);
+               vertical-align: top; }
+.ph-table tr:last-child td { border-bottom: none; }
+.ph-table tr:hover td { background: rgba(255,255,255,0.025); }
+
+.ph-idx  { font-family: monospace; font-size: 0.75rem; color: var(--muted);
+           text-align: right; padding-right: 0.9rem; }
+.ph-lbl  { font-weight: 600; }
+.ph-sub  { font-size: 0.73rem; color: var(--muted); margin-top: 2px; }
+.ph-range { font-family: monospace; font-size: 0.78rem; white-space: nowrap; }
+.ph-strings { font-family: monospace; font-size: 0.75rem; color: var(--muted); }
+
+.badge-pat { display: inline-block; background: rgba(255,255,255,0.06);
+             border-radius: 3px; padding: 1px 5px; font-size: 0.68rem;
+             color: var(--muted); margin: 1px 2px; }
+.badge-semi { display: inline-block; background: rgba(77,159,255,0.12);
+              border-radius: 3px; padding: 1px 5px; font-size: 0.68rem;
+              color: #4d9fff; margin: 1px 2px; }
+.badge-chord { display: inline-block; background: rgba(181,224,0,0.10);
+               border-radius: 3px; padding: 1px 5px; font-size: 0.68rem;
+               color: #b5e000; margin: 1px 2px; }
+
+/* description block */
+.isd-desc { color: var(--muted); font-size: 0.88rem; line-height: 1.6;
+            border-left: 3px solid var(--border); padding-left: 0.9rem;
+            margin-bottom: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="isd-page">
+
+  <div class="isd-crumb">
+    <a href="/inspect">Curriculum</a>
+    <span>›</span>
+    {{ stage.title }}
+  </div>
+
+  <div class="isd-hero">
+    <div class="isd-icon" style="background:{{ stage.color }}22; border:1px solid {{ stage.color }}44">
+      {{ stage.icon }}
+    </div>
+    <div class="isd-hero-text">
+      <h1>{{ stage.title }}</h1>
+      <p>{{ stage.subtitle }}</p>
+      <div class="isd-notes">
+        {% for n in stage.notes %}
+          <span class="note-chip-sm"
+                style="background:{{ note_system[n].color if n in note_system else '#888' }}">{{ n }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Unlock chain -->
+  {% if chain %}
+  <div class="isd-chain">
+    {% for node in chain %}
+      {% if not loop.first %}<span class="isd-chain-arrow">→</span>{% endif %}
+      <div class="isd-chain-node{% if node.id == stage.id %} active{% endif %}">
+        {% if node.id != stage.id %}<a href="/inspect/{{ node.id }}">{{ node.title }}</a>
+        {% else %}{{ node.title }}{% endif %}
+      </div>
+    {% endfor %}
+    {% if stage.unlocks %}
+      <span class="isd-chain-arrow">→</span>
+      {% for uid in stage.unlocks %}
+        <div class="isd-chain-node">
+          <a href="/inspect/{{ uid }}">{{ stage_map[uid].title }}</a>
+        </div>
+        {% if not loop.last %}<span class="isd-chain-arrow">+</span>{% endif %}
+      {% endfor %}
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Stats -->
+  <div class="isd-stats">
+    <div class="isd-stat">
+      <div class="isd-stat-val">{{ stage.notes | length }}</div>
+      <div class="isd-stat-lbl">Notes</div>
+    </div>
+    <div class="isd-stat">
+      <div class="isd-stat-val">{{ stage.phases | length }}</div>
+      <div class="isd-stat-lbl">Phases</div>
+    </div>
+    <div class="isd-stat">
+      <div class="isd-stat-val">{{ total_patterns }}</div>
+      <div class="isd-stat-lbl">Total patterns</div>
+    </div>
+    <div class="isd-stat">
+      <div class="isd-stat-val">{{ stage.requires | length }}</div>
+      <div class="isd-stat-lbl">Prerequisites</div>
+    </div>
+  </div>
+
+  {% if stage.description %}
+  <p class="isd-desc">{{ stage.description }}</p>
+  {% endif %}
+
+  <!-- Phases table -->
+  <div class="isd-section-head">Phases</div>
+  <table class="ph-table">
+    <thead>
+      <tr>
+        <th style="text-align:right">#</th>
+        <th>Label</th>
+        <th>Frets</th>
+        <th>Strings</th>
+        <th>Patterns / extra data</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for ph in stage.phases %}
+      <tr>
+        <td class="ph-idx">{{ loop.index }}</td>
+        <td>
+          <div class="ph-lbl">{{ ph.label }}</div>
+          {% if ph.chord_desc %}<div class="ph-sub">{{ ph.chord_desc }}</div>{% endif %}
+        </td>
+        <td class="ph-range">
+          {% if ph.fret_min is defined %}{{ ph.fret_min }}–{{ ph.fret_max }}{% else %}—{% endif %}
+        </td>
+        <td class="ph-strings">
+          {% if ph.string_subset %}{{ ph.string_subset | join(', ') }}{% else %}all{% endif %}
+        </td>
+        <td>
+          {% for pat in ph.patterns %}
+            {% if pat is mapping %}
+              {% if pat.random is defined %}
+                <span class="badge-pat">random × {{ pat.random }}</span>
+              {% elif pat.type is defined %}
+                <span class="badge-pat">{{ pat.type }} (reps={{ pat.reps }})</span>
+              {% else %}
+                <span class="badge-pat">{{ pat }}</span>
+              {% endif %}
+            {% else %}
+              <span class="badge-pat">{{ pat }}</span>
+            {% endif %}
+          {% endfor %}
+          {% if ph.interval_semis_list %}
+            &nbsp;semis:
+            {% for s in ph.interval_semis_list %}
+              <span class="badge-semi">{{ s }}</span>
+            {% endfor %}
+          {% endif %}
+          {% if ph.chord_name %}
+            <span class="badge-chord">{{ ph.chord_name }}</span>
+            &nbsp;root <span class="badge-chord">{{ ph.chord_root }}</span>
+            &nbsp;intervals:
+            {% for iv in ph.chord_intervals %}
+              <span class="badge-semi">{{ iv }}</span>
+            {% endfor %}
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div style="margin-top:2rem; display:flex; gap:0.75rem;">
+    <a href="/learn/{{ stage.id }}" class="btn-primary">Open lesson →</a>
+    <a href="/inspect" class="btn-secondary">← All stages</a>
+  </div>
+
+</div>
+{% endblock %}
