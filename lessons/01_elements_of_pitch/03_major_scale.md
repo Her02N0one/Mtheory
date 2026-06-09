@@ -28,14 +28,14 @@ white *or* black, with nothing in between. Using only the white keys on the
 piano keyboard, there are **two half steps** in each octave: between [[E]] and
 [[F]], and between [[B]] and [[C]].
 
-:::widget stepview {steps: [{from: "D4", type: "half"}, {from: "G4", type: "half"}]}
+:::widget stepview {steps: [{from: "E4", type: "half"}, {from: "B4", type: "half"}]}
 :::
 
 A **whole step** skips the very next key and goes instead to the following one —
 it spans two half steps. Using only the white keys, there are **five whole
 steps** in each octave: C–D, D–E, F–G, G–A, and A–B.
 
-:::widget stepview {from: "C4", type: "whole"}
+:::widget stepview {type: "whole"}
 :::
 
 On the chromatic circle, each clockwise position is one half step. A whole step

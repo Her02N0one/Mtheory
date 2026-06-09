@@ -58,6 +58,10 @@
       this.quiz = opts.quiz || null;
       this.quizTargetPc = this.quiz != null ? this._toPitchClass(this.quiz.target) : null;
 
+      // Linger: ms notes remain visible after being played (0 = off).
+      this.lingerMs = opts.lingerMs != null ? opts.lingerMs : 0;
+      this._lingerMidi = new Map(); // midi -> timeoutId
+
       this._cellEls = new Map(); // "s:f" -> element
       this.render();
     }
@@ -134,6 +138,10 @@
       grid.appendChild(nums);
 
       this.root.appendChild(grid);
+
+      // Re-attach linger dots that survived a re-render (timers still running).
+      var self = this;
+      this._lingerMidi.forEach(function (_id, midi) { self._addLingerDot(midi); });
     }
 
     _makeCell(stringIdx, fret) {
@@ -177,6 +185,7 @@
       this._play(midi, KB().freqOf(midi));
       cell.classList.add("mf-cell--active");
       setTimeout(() => cell.classList.remove("mf-cell--active"), 160);
+      if (this.lingerMs > 0) this.lingerNote(midi);
 
       if (this.quizTargetPc != null) {
         // Capture sticky before emitting: the engine's onEvent handler may
@@ -305,7 +314,66 @@
       });
     }
 
-    destroy() { this.root.innerHTML = ""; this._cellEls.clear(); }
+    // Linger API: show a note dot for `ms` ms (defaults to this.lingerMs), then
+    // fade it out.  Calling again before expiry resets the timer.  Notes already
+    // in permanentHighlightMidi are skipped (they're always visible anyway).
+    lingerNote(midi, ms) {
+      var dur = ms != null ? ms : this.lingerMs;
+      if (!dur) return;
+      var already = this._lingerMidi.has(midi);
+      if (already) {
+        clearTimeout(this._lingerMidi.get(midi));
+      } else {
+        this._addLingerDot(midi);
+      }
+      var self = this;
+      this._lingerMidi.set(midi, setTimeout(function () {
+        self._lingerMidi.delete(midi);
+        self._removeLingerDot(midi);
+      }, dur));
+    }
+
+    _addLingerDot(midi) {
+      if (this.highlightMidi.has(midi)) return; // permanent dot already visible
+      var k = KB();
+      var name = k.nameOf(midi);
+      var style = k.noteStyle(name);
+      if (!style) return;
+      var labelText = this.labelMap[midi] != null ? String(this.labelMap[midi]) : name;
+      this._cellEls.forEach(function (el, key) {
+        var parts = key.split(":");
+        var s = parseInt(parts[0], 10);
+        var f = parseInt(parts[1], 10);
+        if (midiAt(s, f) !== midi) return;
+        if (el.querySelector(".mf-dot--linger")) return;
+        var dot = document.createElement("span");
+        dot.className = "mf-dot mf-dot--" + style.shape + " mf-dot--linger mf-dot--hi";
+        dot.style.background = style.color;
+        dot.style.color = k.readableText(style.color);
+        dot.textContent = labelText;
+        el.appendChild(dot);
+      });
+    }
+
+    _removeLingerDot(midi) {
+      this._cellEls.forEach(function (el, key) {
+        var parts = key.split(":");
+        var s = parseInt(parts[0], 10);
+        var f = parseInt(parts[1], 10);
+        if (midiAt(s, f) !== midi) return;
+        var dot = el.querySelector(".mf-dot--linger");
+        if (!dot) return;
+        dot.classList.add("mf-dot--expiring");
+        setTimeout(function () { if (dot.parentNode) dot.parentNode.removeChild(dot); }, 520);
+      });
+    }
+
+    destroy() {
+      this._lingerMidi.forEach(function (id) { clearTimeout(id); });
+      this._lingerMidi.clear();
+      this.root.innerHTML = "";
+      this._cellEls.clear();
+    }
   }
 
   Fretboard.midiAt = midiAt;

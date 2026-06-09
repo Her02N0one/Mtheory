@@ -680,12 +680,14 @@
     el.appendChild(kbHost);
     el.appendChild(fbHost);
 
+    const lingerMs = props.linger === false ? 0 : (props.linger != null ? props.linger : 3500);
     const fb = new global.MtheoryFretboard(fbHost, {
       strings: props.strings,
       frets: props.frets != null ? props.frets : 5,
       highlight: props.highlight,
       reference: props.reference,
       labels: props.labels === "all" ? "all" : "marks",
+      lingerMs: lingerMs,
     });
     // Match the keyboard's range to the fretboard's reachable pitches so the
     // two instruments cover the same span (e.g. 5 frets => E2..A4).
@@ -702,7 +704,8 @@
       // Mirror each play onto the other instrument by absolute MIDI (§1d).
       el.addEventListener("mtheory:note_played", (ev) => {
         const m = ev.detail && ev.detail.payload && ev.detail.payload.midi;
-        if (m != null) fb.setHighlightMidi(new Set([m]));
+        if (m == null) return;
+        if (lingerMs > 0) fb.lingerNote(m); else fb.setHighlightMidi(new Set([m]));
       });
       el.addEventListener("mtheory:fret_played", (ev) => {
         const m = ev.detail && ev.detail.payload && ev.detail.payload.midi;
@@ -758,6 +761,7 @@
 
     // Optional third view: the guitar neck, synced by absolute MIDI.
     let fb = null;
+    const scLingerMs = props.linger === false ? 0 : (props.linger != null ? props.linger : 3500);
     const wantGuitar = props.guitar === true || props.frets != null || props.strings != null;
     if (wantGuitar && global.MtheoryFretboard) {
       const fbHost = document.createElement("div");
@@ -769,6 +773,7 @@
         highlight: props.highlight,
         reference: props.reference,
         labels: props.fbLabels === "all" ? "all" : "marks",
+        lingerMs: scLingerMs,
       });
     }
 
@@ -780,7 +785,9 @@
         // Mirror onto whichever instruments did not originate the event.
         if (src !== "staff") st.setHighlightMidi(new Set([m]));
         if (src !== "keyboard") kb.setHighlight(KBc.sciOf(m));
-        if (fb && src !== "fretboard") fb.setHighlightMidi(new Set([m]));
+        if (fb && src !== "fretboard") {
+          if (scLingerMs > 0) fb.lingerNote(m); else fb.setHighlightMidi(new Set([m]));
+        }
       });
       el.addEventListener("mtheory:fret_played", (ev) => {
         const p = ev.detail && ev.detail.payload;
@@ -788,7 +795,8 @@
         const m = p.midi;
         st.setHighlightMidi(new Set([m]));
         kb.setHighlight(KBc.sciOf(m));
-        if (fb) fb.setHighlightMidi(new Set([m])); // light its other unisons too
+        // Fretboard handles its own linger via _press(); only sync non-linger mode.
+        if (fb && scLingerMs === 0) fb.setHighlightMidi(new Set([m]));
       });
     }
     return { keyboard: kb, staff: st, fretboard: fb,

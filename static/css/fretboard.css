@@ -94,6 +94,15 @@
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
+/* Linger dot: persists after a note is played, then fades out. */
+.mf-dot--linger {
+  transition: opacity 0.5s ease-out;
+  opacity: 1;
+}
+.mf-dot--expiring {
+  opacity: 0;
+}
+
 /* flashMidi: brief glow when a note is played on the paired keyboard */
 .mf-cell--flash::after {
   content: "";
