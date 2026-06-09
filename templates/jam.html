@@ -60,6 +60,7 @@
 {% block scripts %}
   <script src="/static/js/components/keyboard.js?v=10"></script>
   <script src="/static/js/components/fretboard.js?v=6"></script>
+  <script src="/static/js/midi.js?v=1"></script>
   <script>
   (function () {
     "use strict";
@@ -81,6 +82,15 @@
       buildFretboard();
       buildKeyboard();
       wireControls();
+      if (window.MtheoryMidi) window.MtheoryMidi.init();
+    });
+
+    // Route MIDI note-on events to the keyboard so they play audio,
+    // animate, and fire note_played → fretboard linger via existing listener.
+    document.addEventListener("mtheory:midi_note", function (ev) {
+      var midi = ev.detail && ev.detail.midi;
+      if (midi == null) return;
+      if (kb) kb.triggerNote(midi);
     });
 
     function buildFretboard() {
