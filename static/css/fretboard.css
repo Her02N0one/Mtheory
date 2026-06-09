@@ -13,10 +13,10 @@
 .mf-grid {
   display: flex;
   flex-direction: column;
-  background: #241a12;
   border: 1px solid #3a2a1c;
   border-radius: var(--radius, 8px);
   padding: 6px 10px 4px;
+  background: linear-gradient(to bottom, #573f2a 29%, #3a2a1c 25%);
 }
 
 .mf-row {

@@ -1,0 +1,154 @@
+/* fifthscircle.css — Circle of Fifths widget (v2) ----------------------------- */
+
+.mfc-wrap {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* SVG container */
+.mfc-svg {
+  display: block;
+  max-width: 400px;
+  width: 100%;
+  overflow: visible;
+}
+
+/* Node circle */
+.mfc-shape {
+  stroke-width: 1.5;
+  transition: filter 0.12s, stroke-width 0.12s;
+}
+
+/* Labels inside nodes */
+.mfc-lbl {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-weight: 700;
+  pointer-events: none;
+  user-select: none;
+}
+.mfc-lbl--enh {
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+/* Invisible hit area */
+.mfc-hit {
+  cursor: pointer;
+}
+
+/* Clickable state */
+.mfc-node--play {
+  cursor: pointer;
+}
+.mfc-node--play:hover .mfc-shape {
+  filter: brightness(1.1);
+  stroke-width: 2.5;
+}
+
+/* Selected state — white ring + brightness boost */
+.mfc-node--active .mfc-shape {
+  stroke: #fff !important;
+  stroke-width: 3 !important;
+  filter: brightness(1.18) drop-shadow(0 0 4px rgba(0,0,0,.25));
+}
+
+/* Region labels */
+.mfc-region {
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 11px;
+  font-weight: 600;
+  pointer-events: none;
+  user-select: none;
+}
+.mfc-region--sharp {
+  fill: var(--warn, #f59e0b);
+}
+.mfc-region--flat {
+  fill: var(--accent, #3b82f6);
+}
+
+/* Info panel */
+.mfc-info {
+  width: 100%;
+  max-width: 400px;
+  min-height: 52px;
+  text-align: center;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: var(--text, #111);
+  line-height: 1.5;
+  background: var(--bg, rgba(0,0,0,.03));
+  border-radius: 8px;
+}
+.mfc-hint {
+  color: var(--muted, #6b7280);
+  font-style: italic;
+}
+.mfc-info-name {
+  font-size: 18px;
+  font-weight: 800;
+}
+.mfc-info-acc {
+  font-size: 14px;
+  color: var(--muted, #4b5563);
+}
+.mfc-info-enh {
+  display: inline-block;
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+  margin-top: 2px;
+}
+
+/* — Relative key info — */
+.mfc-info-rel {
+  font-size: 13px;
+  color: var(--text, #4b5563);
+}
+.mfc-info-rel em {
+  color: var(--accent, #3b82f6);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* — Inner minor ring — */
+.mfc-sep-ring {
+  fill: none;
+  stroke: var(--border, #d1d5db);
+  stroke-width: 1;
+}
+
+.mfc-shape--minor {
+  opacity: 0.92;
+}
+
+.mfc-lbl--minor {
+  font-size: 8.5px;
+}
+
+/* Related state: relative of the selected key */
+.mfc-node--related .mfc-shape {
+  stroke: #fff !important;
+  stroke-width: 2 !important;
+  filter: brightness(1.1);
+}
+
+/* — Legend below SVG — */
+.mfc-legend {
+  font-size: 12px;
+  color: var(--muted, #6b7280);
+  text-align: center;
+  padding: 2px 0;
+}
+.mfc-legend strong {
+  color: var(--text, #374151);
+}
+.mfc-legend em {
+  color: var(--text, #374151);
+  font-style: italic;
+}

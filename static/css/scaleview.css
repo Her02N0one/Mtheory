@@ -15,14 +15,20 @@
 .ms-head { fill: var(--text, #e8e8f0); }
 .ms-note--hi { stroke: #fff; stroke-width: 2; }
 
+/* Altered degree highlight — amber/warning colour (used by minor scale widgets) */
+.ms-note--changed .ms-head { fill: var(--warn, #f59e0b) !important; stroke: var(--warn, #f59e0b) !important; }
+.ms-note--changed .ms-acc  { fill: var(--warn, #f59e0b) !important; }
+
 /* Scale Degree Numbers & Hats */
-.msv-degree {
+.msv-degree,
+.mkv-degree {
   fill: var(--text, #e8e8f0);
   font-size: 11px;
   font-weight: 700;
   dominant-baseline: alphabetic;
 }
-.msv-degree-hat {
+.msv-degree-hat,
+.mkv-degree-hat {
   fill: var(--muted, #7777aa);
   font-size: 9px;
   font-weight: 700;

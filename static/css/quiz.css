@@ -1,0 +1,133 @@
+/* quiz.css — Styles for quiz-keysig and quiz-mcq widgets -------------------- */
+
+/* ══ KeysigQuiz ══════════════════════════════════════════════════════════════ */
+
+.mkq-wrap {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius-lg, 12px);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mkq-prompt {
+  font-size: 15px;
+  color: var(--text, #111);
+  line-height: 1.4;
+  min-height: 24px;
+}
+.mkq-qnum {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--accent, #3b82f6);
+  color: #fff;
+  border-radius: 4px;
+  padding: 1px 7px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+.mkq-done {
+  font-weight: 700;
+  color: var(--accent, #3b82f6);
+}
+
+/* Staff display (identify mode) */
+.mkq-sig {
+  /* keysigview styles apply; we just need a slim wrapper */
+}
+/* Override keysigview card padding when embedded inside quiz */
+.mkq-sig .mksv-wrap {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--bg, rgba(0,0,0,.03));
+}
+
+/* Keyboard */
+.mkq-kb {
+  /* keyboard fills this naturally */
+}
+
+/* Progress */
+.mkq-progress {
+  font-size: 13px;
+  color: var(--muted, #6b7280);
+}
+.mkq-prog-correct {
+  font-weight: 700;
+  color: var(--accent, #3b82f6);
+}
+
+/* Feedback flash */
+.mkq-feedback {
+  font-size: 15px;
+  font-weight: 600;
+  min-height: 24px;
+  text-align: center;
+  transition: color 0.2s;
+}
+.mkq-feedback--ok {
+  color: var(--success, #22c55e);
+}
+
+/* ══ MCQ ═════════════════════════════════════════════════════════════════════ */
+
+.mmcq-wrap {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius-lg, 12px);
+  padding: 18px 20px 16px;
+}
+
+.mmcq-question {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text, #111);
+  margin: 0 0 14px;
+  line-height: 1.4;
+}
+
+.mmcq-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mmcq-btn {
+  width: 100%;
+  text-align: left;
+  padding: 9px 14px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 8px;
+  background: var(--bg, rgba(0,0,0,.03));
+  color: var(--text, #111);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, opacity 0.2s;
+}
+.mmcq-btn:hover:not([disabled]):not(.mmcq-btn--correct):not(.mmcq-btn--wrong) {
+  background: var(--bg-hover, rgba(0,0,0,.07));
+  border-color: var(--accent, #3b82f6);
+}
+.mmcq-btn--correct {
+  background: var(--success-bg, #dcfce7) !important;
+  border-color: var(--success, #22c55e) !important;
+  color: var(--success-text, #166534) !important;
+  font-weight: 600;
+  cursor: default;
+}
+.mmcq-btn--wrong {
+  background: var(--error-bg, #fee2e2) !important;
+  border-color: var(--error, #ef4444) !important;
+  color: var(--error-text, #991b1b) !important;
+}
+.mmcq-btn--muted {
+  opacity: 0.35;
+  cursor: default;
+}
+.mmcq-btn[disabled] {
+  cursor: default;
+}

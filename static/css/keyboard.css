@@ -55,7 +55,6 @@
   top: 0;
   width: var(--mk-black-w, 4.2%);
   height: 110px;
-  transform: translateX(-50%);
   background: linear-gradient(#2c2c34, #14141a);
   border: 1px solid #000;
   border-radius: 0 0 4px 4px;

@@ -1,0 +1,100 @@
+/* minorscaleview.css — Minor Scale Comparison Widget ----------------------- */
+
+.mmsv-wrap {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius-lg, 12px);
+  padding: 16px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* — Tab row — */
+.mmsv-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.mmsv-tab {
+  flex: 1;
+  min-width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 7px 8px 5px;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text, #111);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.mmsv-tab:hover:not(.mmsv-tab--active) {
+  background: var(--bg, rgba(0,0,0,.04));
+}
+.mmsv-tab--active {
+  background: var(--accent, #3b82f6);
+  border-color: var(--accent, #3b82f6);
+  color: #fff;
+}
+
+.mmsv-tab-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.mmsv-tab-badge {
+  font-size: 10px;
+  opacity: 0.8;
+  letter-spacing: 0.3px;
+}
+.mmsv-tab--active .mmsv-tab-badge {
+  opacity: 0.9;
+}
+
+/* — Title — */
+.mmsv-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text, #111);
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+
+/* — Scale staff panels — */
+.mmsv-scale--minor {
+  /* the ScaleView applies msv-wrap styles; suppress duplicate card */
+}
+.mmsv-scale--minor .msv-wrap,
+.mmsv-scale--major .msv-wrap {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: var(--bg, rgba(0,0,0,.03));
+}
+
+/* — Compare label — */
+.mmsv-compare-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted, #6b7280);
+  padding-left: 4px;
+}
+
+/* — Info strip — */
+.mmsv-info {
+  font-size: 13px;
+  color: var(--muted, #6b7280);
+  background: var(--bg, rgba(0,0,0,.03));
+  border-radius: 6px;
+  padding: 6px 10px;
+  line-height: 1.4;
+}
+.mmsv-altered-badge {
+  font-weight: 700;
+  color: var(--warn, #d97706);
+}

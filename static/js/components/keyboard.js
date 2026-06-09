@@ -242,15 +242,20 @@
       const blackLayer = document.createElement("div");
       blackLayer.className = "mk-black-layer";
       const unit = 100 / whites.length; // % width of one white key
-      // Black key = half a white unit so the white gap between two adjacent
-      // black keys (e.g. Db|Eb) is exactly one black-key wide, not a sliver.
-      this.root.style.setProperty("--mk-black-w", unit / 2 + "%");
+      const blackKeyWidth = unit * 7 / 12; // ~58% of white key width (real piano ratio)
+      this.root.style.setProperty("--mk-black-w", blackKeyWidth + "%");
+      // Fraction of black key width that extends LEFT of its white-key boundary.
+      // Chosen so visible white tops are equal within each group:
+      //   C-D-E group (3 whites, 2 blacks): each top = (3u - 2*Wb)/3 = 2u/3
+      //   F-G-A-B group (4 whites, 3 blacks): each top = (4u - 3*Wb)/4 = 5u/8
+      const BLACK_LEFT_FRAC = { 1: 2/3, 3: 1/3, 6: 3/4, 8: 1/2, 10: 1/4 };
       for (let m = this.startMidi; m <= this.endMidi; m++) {
         if (BLACK_PCS.indexOf(pitchClassOf(m)) === -1) continue;
-        const leftWhite = whiteIndex.get(m - 1); // white key just below
+        const leftWhite = whiteIndex.get(m - 1);
         if (leftWhite == null) continue;
         const key = this._makeKey(m, "black");
-        key.style.left = (leftWhite + 1) * unit + "%";
+        const fracLeft = BLACK_LEFT_FRAC[pitchClassOf(m)] ?? 0.5;
+        key.style.left = ((leftWhite + 1) * unit - fracLeft * blackKeyWidth) + "%";
         blackLayer.appendChild(key);
       }
       this.root.appendChild(blackLayer);

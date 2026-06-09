@@ -1,0 +1,122 @@
+/* keysigview.css — Key Signature Explorer widget ----------------------------- */
+
+.mksv-wrap {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius-lg, 12px);
+  padding: 20px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* — Toggle: Sharps / Flats — */
+.mksv-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.mksv-btn {
+  flex: 1;
+  padding: 7px 0;
+  border: 1px solid var(--border, #d1d5db);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text, #111);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.mksv-btn:hover:not(.mksv-btn--active) {
+  background: var(--bg, rgba(0,0,0,.04));
+}
+.mksv-btn--active {
+  background: var(--accent, #3b82f6);
+  color: #fff;
+  border-color: var(--accent, #3b82f6);
+}
+
+/* — Slider row — */
+.mksv-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mksv-slider {
+  flex: 1;
+  cursor: pointer;
+  accent-color: var(--accent, #3b82f6);
+}
+.mksv-count {
+  min-width: 28px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text, #111);
+  text-align: right;
+}
+
+/* — Staff SVG — */
+.mksv-staff {
+  /* just a container; SVG fills it */
+}
+.mksv-svg {
+  display: block;
+  overflow: visible;
+}
+.mksv-line {
+  stroke: var(--muted, #c8cdd4);
+  stroke-width: 1;
+}
+.mksv-clef {
+  fill: var(--text, #333);
+  font-family: "Bravura", "Maestro", serif;
+  user-select: none;
+}
+.mksv-acc {
+  fill: var(--text, #333);
+  font-family: "Bravura", "Maestro", serif;
+  user-select: none;
+}
+.mksv-acc--hi {
+  fill: var(--accent, #3b82f6);
+}
+/* Downward-pointing caret under the rule accidental */
+.mksv-caret {
+  fill: var(--accent, #3b82f6);
+}
+
+/* — Key name display — */
+.mksv-keyname {
+  text-align: center;
+  line-height: 1.1;
+  margin-top: 2px;
+}
+.mksv-key-note {
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--text, #111);
+  letter-spacing: -0.5px;
+}
+.mksv-key-suffix {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--muted, #6b7280);
+}
+.mksv-key-rel {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--accent, #3b82f6);
+}
+
+/* — Rule text — */
+.mksv-rule {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted, #6b7280);
+  background: var(--bg, rgba(0,0,0,.03));
+  border-radius: 6px;
+  padding: 6px 10px;
+  min-height: 28px;
+  line-height: 1.4;
+}

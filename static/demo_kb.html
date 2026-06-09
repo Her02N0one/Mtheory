@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Keyboard Layout Variants</title>
+<style>
+  body { background: #1a1a2e; color: #e8e8f0; font: 14px/1.6 system-ui, sans-serif; padding: 28px 32px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { opacity: 0.45; margin: 0 0 36px; font-size: 13px; }
+  .variant { margin-bottom: 36px; }
+  .vname { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .vdesc { font-size: 12px; opacity: 0.55; margin-bottom: 10px; font-family: monospace; }
+  /* keyboard */
+  .kb { position: relative; width: 480px; height: 120px; user-select: none; }
+  .white-row { display: flex; height: 100%; }
+  .wk { flex: 1; background: #f2ede0; border: 1px solid #aaa; box-sizing: border-box; border-radius: 0 0 4px 4px; }
+  .black-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+  .bk { position: absolute; top: 0; height: 62%; background: #1c1c1c; border: 1px solid #555; box-sizing: border-box; border-radius: 0 0 3px 3px; }
+</style>
+</head>
+<body>
+
+<h1>Keyboard Layout Variants</h1>
+<p class="sub">Open this file in a browser, then tell me the option number that looks right.</p>
+
+<script>
+// W = 60px (white key width), total = 8*60 = 480px
+// Each variant: { bw: black key width in px, keys: [left px per black key: C#,D#,F#,G#,A#] }
+const W = 60;
+
+function boundary(leftWhiteIdx) { return (leftWhiteIdx + 1) * W; }
+
+function pos(leftWhiteIdx, fracLeft, bw) {
+  return boundary(leftWhiteIdx) - fracLeft * bw;
+}
+
+const variants = [
+  {
+    name: "Option 1 — All centered",
+    desc: "Every black key centered exactly between its two white neighbors (fracLeft=0.5 each)",
+    bw: 30,
+    keys: [
+      pos(0, 0.5, 30),  // C#
+      pos(1, 0.5, 30),  // D#
+      pos(3, 0.5, 30),  // F#
+      pos(4, 0.5, 30),  // G#
+      pos(5, 0.5, 30),  // A#
+    ]
+  },
+  {
+    name: "Option 2 — Your description (Db 90%C/10%D, Eb 90%E/10%D, F# 90%F, Ab 50/50, Bb 90%B)",
+    desc: "C#=fracLeft 0.9  D#=0.1  F#=0.9  G#=0.5  A#=0.1  (Wb = 30px)",
+    bw: 30,
+    keys: [
+      pos(0, 0.9, 30),  // C#
+      pos(1, 0.1, 30),  // D#
+      pos(3, 0.9, 30),  // F#
+      pos(4, 0.5, 30),  // G#
+      pos(5, 0.1, 30),  // A#
+    ]
+  },
+  {
+    name: "Option 3 — Equal visible tops per group  (Roland PC-100 optimal)",
+    desc: "C-D-E each show 40px top; F-G-A-B each show 37.5px  (Wb = 30px)",
+    bw: 30,
+    keys: [
+      pos(0, 2/3, 30),  // C#
+      pos(1, 1/3, 30),  // D#
+      pos(3, 3/4, 30),  // F#
+      pos(4, 1/2, 30),  // G#
+      pos(5, 1/4, 30),  // A#
+    ]
+  },
+  {
+    name: "Option 4 — Equal tops per group + wider black keys  (~58% of white)",
+    desc: "Same fractions as Option 3, black keys Wb=35px instead of 30px",
+    bw: 35,
+    keys: [
+      pos(0, 2/3, 35),  // C#
+      pos(1, 1/3, 35),  // D#
+      pos(3, 3/4, 35),  // F#
+      pos(4, 1/2, 35),  // G#
+      pos(5, 1/4, 35),  // A#
+    ]
+  },
+  {
+    name: "Option 5 — Chromatic equal spacing (real piano mechanism logic)",
+    desc: "Each semitone = 7/12 of a white key; C# close to C, D# close to D/E boundary, F# dead-center on F/G  (Wb=30px)",
+    bw: 30,
+    keys: [
+      7*W/12 - 15,   // C# center at 1 semitone
+      3*7*W/12 - 15, // D# center at 3 semitones
+      6*7*W/12 - 15, // F# center at 6 semitones
+      8*7*W/12 - 15, // G# center at 8 semitones
+      10*7*W/12 - 15, // A# center at 10 semitones
+    ]
+  },
+  {
+    name: "Option 6 — Your description but with wider black keys  (Wb = 35px)",
+    desc: "C#=fracLeft 0.9  D#=0.1  F#=0.9  G#=0.5  A#=0.1  (Wb = 35px)",
+    bw: 35,
+    keys: [
+      pos(0, 0.9, 35),  // C#
+      pos(1, 0.1, 35),  // D#
+      pos(3, 0.9, 35),  // F#
+      pos(4, 0.5, 35),  // G#
+      pos(5, 0.1, 35),  // A#
+    ]
+  },
+];
+
+function buildKeyboard(v) {
+  const kb = document.createElement("div");
+  kb.className = "kb";
+
+  // 8 white keys
+  const row = document.createElement("div");
+  row.className = "white-row";
+  for (let i = 0; i < 8; i++) {
+    const k = document.createElement("div");
+    k.className = "wk";
+    row.appendChild(k);
+  }
+  kb.appendChild(row);
+
+  // black keys
+  const layer = document.createElement("div");
+  layer.className = "black-layer";
+  v.keys.forEach(leftPx => {
+    const k = document.createElement("div");
+    k.className = "bk";
+    k.style.left = leftPx + "px";
+    k.style.width = v.bw + "px";
+    layer.appendChild(k);
+  });
+  kb.appendChild(layer);
+  return kb;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  variants.forEach((v, i) => {
+    const wrap = document.createElement("div");
+    wrap.className = "variant";
+
+    const name = document.createElement("div");
+    name.className = "vname";
+    name.textContent = v.name;
+    wrap.appendChild(name);
+
+    const desc = document.createElement("div");
+    desc.className = "vdesc";
+    desc.textContent = v.desc;
+    wrap.appendChild(desc);
+
+    wrap.appendChild(buildKeyboard(v));
+    document.body.appendChild(wrap);
+  });
+});
+</script>
+
+</body>
+</html>

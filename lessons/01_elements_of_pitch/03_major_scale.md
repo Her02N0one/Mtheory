@@ -20,7 +20,6 @@ Throughout these lessons, major scales are named with **uppercase** letters —
 for example **A major** or simply **A** — and minor scales with *lowercase* —
 for example *a minor* or simply *a*.
 :::
-
 ## Phase 1 — Half steps and whole steps
 
 A **half step** is the distance from a key on the piano to the very next key —
@@ -28,22 +27,17 @@ white *or* black, with nothing in between. Using only the white keys on the
 piano keyboard, there are **two half steps** in each octave: between [[E]] and
 [[F]], and between [[B]] and [[C]].
 
-:::widget stepview {steps: [{from: "E4", type: "half"}, {from: "B4", type: "half"}]}
+:::widget stepview {steps: [{from: "E", type: "half"}, {from: "B", type: "half"}], instruments: ["keyboard", "chromacircle", "fretboard"], low: "C4", high: "C5", frets: 5}
 :::
 
 A **whole step** skips the very next key and goes instead to the following one —
 it spans two half steps. Using only the white keys, there are **five whole
-steps** in each octave: C–D, D–E, F–G, G–A, and A–B.
+steps** in each octave: C–D, D–E, F–G, G–A, and A–B. 
 
-:::widget stepview {type: "whole"}
-:::
+Notice how a whole step looks different on the guitar depending on whether you 
+stay on the same string (two frets up) or cross to the next string (drop back three frets):
 
-On the chromatic circle, each clockwise position is one half step. A whole step
-skips one node; a half step moves to the adjacent node.
-
-:::callout key
-The two natural half steps — **[[E]]–[[F]]** and **[[B]]–[[C]]** — are your
-fixed landmarks. Every other pair of adjacent white keys is a whole step apart.
+:::widget stepview {steps: [{from: "C", type: "whole"}, {from: "D", type: "whole"}, {from: "F", type: "whole"}, {from: "G", type: "whole"}, {from: "A", type: "whole"}], instruments: ["keyboard", "chromacircle", "fretboard"], low: "C4", high: "C5", frets: 7}
 :::
 
 ## Phase 2 — C major: the pattern on white keys
@@ -82,7 +76,7 @@ find the **W–W–H** pattern, jump a whole step, then repeat.
 Try playing seven white keys from [[G4]] to [[G5]] and compare the W/H pattern
 to C major:
 
-:::widget keyview {notes: ["G4","A4","B4","C5","D5","E5","F5","G5"], steps: true, labels: "degrees", interactive: true}
+:::widget keyview {notes: ["G4","A4","B4","C5","D5","E5","F5","G5"], steps: true, labels: "none", tetrachords: true, interactive: true}
 :::
 
 :::callout warn
@@ -103,6 +97,9 @@ note is written **[[F#]]** (F-sharp).
 When we **say** a note name with an accidental, the accidental comes **last**:
 *F-sharp*, *B-flat*. But when we write it on the **staff**, the accidental symbol
 always appears **before** the notehead it modifies.
+:::
+
+:::widget staff {notes: ["G4", "A4", "B4", "C5", "D5", "E5", "F#5", "G5"], interactive: true}
 :::
 
 :::widget keyview {root: "G4", scale: "major", steps: true, labels: "both", tetrachords: true, interactive: true}

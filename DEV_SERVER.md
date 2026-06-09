@@ -2,9 +2,16 @@
 
 ## Quick start
 
+**Linux/macOS:**
 ```bash
 # From the project root (Mtheory/)
 .venv/bin/python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+**Windows (PowerShell):**
+```powershell
+# From the project root (Mtheory/)
+.venv\Scripts\python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Open [http://localhost:8000](http://localhost:8000) in your browser.
@@ -15,22 +22,35 @@ Open [http://localhost:8000](http://localhost:8000) in your browser.
 
 If the venv is missing packages (e.g. after a fresh clone):
 
+**Linux/macOS:**
 ```bash
 .venv/bin/pip install -r requirements.txt
 ```
 
+**Windows (PowerShell):**
+```powershell
+.venv\Scripts\pip install -r requirements.txt
+```
+
 If `.venv` doesn't exist yet:
 
+**Linux/macOS:**
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-## Why `.venv/bin/python -m uvicorn` instead of just `uvicorn`
+**Windows (PowerShell):**
+```powershell
+python -m venv .venv
+.venv\Scripts\pip install -r requirements.txt
+```
 
-The `.venv/bin/uvicorn` wrapper script may fail with `No module named 'uvicorn'` if the venv's
-site-packages aren't on the path (a known issue when packages land in `~/.local` instead of the
-venv). Calling Python directly with `-m uvicorn` bypasses the wrapper and works reliably.
+## Why use `.venv/bin/python -m uvicorn` (Linux) or `.venv\Scripts\python -m uvicorn` (Windows) instead of just `uvicorn`
+
+The venv's `uvicorn` wrapper script may fail with `No module named 'uvicorn'` if the venv's
+site-packages aren't on the path. Calling Python directly with `-m uvicorn` bypasses the wrapper
+and works reliably on both platforms.
 
 ## Common options
 
@@ -42,8 +62,18 @@ venv). Calling Python directly with `-m uvicorn` bypasses the wrapper and works 
 
 ## Stopping the server
 
-`Ctrl+C` in the terminal running the server, or:
+`Ctrl+C` in the terminal running the server, or kill it by process:
 
+**Linux/macOS:**
 ```bash
 pkill -f "uvicorn main:app"
+```
+
+**Windows (PowerShell):**
+```powershell
+Get-Process python | Where-Object { $_.MainWindowTitle -eq "" } | Stop-Process
+```
+Or more precisely, find and kill by port:
+```powershell
+(Get-NetTCPConnection -LocalPort 8000).OwningProcess | ForEach-Object { Stop-Process -Id $_ }
 ```

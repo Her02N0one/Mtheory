@@ -527,10 +527,12 @@
           this._applyThen(block.on_pass);
         }
       };
-      this.root.addEventListener("mtheory:fret_quizzed", onQuiz);
-      this.root.addEventListener("mtheory:key_quizzed", onQuiz);
-      this.listeners.push({ eventName: "mtheory:fret_quizzed", handler: onQuiz });
-      this.listeners.push({ eventName: "mtheory:key_quizzed", handler: onQuiz });
+      this.root.addEventListener("mtheory:fret_quizzed",   onQuiz);
+      this.root.addEventListener("mtheory:key_quizzed",    onQuiz);
+      this.root.addEventListener("mtheory:quiz_answered",  onQuiz); // MCQ + future widgets
+      this.listeners.push({ eventName: "mtheory:fret_quizzed",  handler: onQuiz });
+      this.listeners.push({ eventName: "mtheory:key_quizzed",   handler: onQuiz });
+      this.listeners.push({ eventName: "mtheory:quiz_answered", handler: onQuiz });
     }
 
     _chip(noteName) {
@@ -832,169 +834,17 @@
 
   // Step view — chromatic circle + keyboard side by side, both highlighting
   // the `from` note and the note a half/whole step away.  Synced on click.
+// Step view — chromatic circle + keyboard side by side, both highlighting
+  // the `from` note and the note a half/whole step away.  Synced on click.
+  // Step view — isolated whole/half steps orchestrated across instruments.
   MtheoryEngine.register("stepview", function (el, props) {
-    props = props || {};
-    const KBc = global.MtheoryKeyboard;
-    if (!KBc || !global.MtheoryChromaCircle) {
-      el.textContent = "[stepview: instruments not loaded]";
+    if (!global.MtheoryStepView) {
+      el.textContent = "[MtheoryStepView not loaded]";
       return null;
     }
-    el.classList.add("mte-stepview");
-
-    const circleHost = document.createElement("div");
-    circleHost.className = "mte-stepview__circle";
-    const kbWrap = document.createElement("div");
-    kbWrap.className = "mte-stepview__kbwrap";
-    const kbHost = document.createElement("div");
-    kbHost.className = "mte-stepview__kb";
-    kbWrap.appendChild(kbHost);
-    el.appendChild(circleHost);
-    el.appendChild(kbWrap);
-
-    const defaultType = props.type || "half";
-
-    // ---- Build the pairs list --------------------------------------------
-    // Three modes:
-    //  1. `steps: [{from, type}, …]`  — explicit named pairs (lesson DSL array)
-    //  2. `from: "C4", type: "whole"` — single explicit pair
-    //  3. (default) all white-key pairs of `type` in C4–C5
-    const pairs = []; // [{from, to, diff}]
-
-    if (Array.isArray(props.steps) && props.steps.length) {
-      props.steps.forEach(function (s) {
-        const m = KBc.midiOfSci(String(s.from));
-        if (m == null) return;
-        const diff = (s.type === "whole") ? 2 : 1;
-        pairs.push({ from: m, to: m + diff, diff: diff });
-      });
-    } else if (props.from) {
-      const m = KBc.midiOfSci(String(props.from));
-      if (m != null) {
-        const diff = defaultType === "whole" ? 2 : 1;
-        pairs.push({ from: m, to: m + diff, diff: diff });
-      }
-    } else {
-      // Default: all white-key pairs of the given type in C4-C5.
-      const C4 = KBc.midiOfSci("C4"), C5 = KBc.midiOfSci("C5");
-      const WHITE_PCS = [0, 2, 4, 5, 7, 9, 11];
-      const whites = [];
-      for (let m = C4; m <= C5; m++) {
-        if (WHITE_PCS.indexOf(KBc.pitchClassOf(m)) !== -1) whites.push(m);
-      }
-      for (let i = 0; i < whites.length - 1; i++) {
-        const diff = whites[i + 1] - whites[i];
-        const isHalf = diff === 1;
-        if ((defaultType === "half" && isHalf) || (defaultType === "whole" && !isHalf)) {
-          pairs.push({ from: whites[i], to: whites[i + 1], diff: diff });
-        }
-      }
-    }
-
-    // All highlighted notes = union of all pair endpoints.
-    const hiMidis = [].concat.apply([], pairs.map(function (p) { return [p.from, p.to]; }));
-    const hiMidiUniq = hiMidis.filter(function (v, i, a) { return a.indexOf(v) === i; });
-
-    // Chromatic circle: each pair becomes a step arc.
-    const circle = new global.MtheoryChromaCircle(circleHost, {
-      steps: pairs.map(function (p) {
-        return { from: KBc.nameOf(p.from), type: p.diff === 1 ? "half" : "whole" };
-      }),
-      highlight: hiMidiUniq.map(function (m) { return KBc.nameOf(m); }),
-      labels: "names",
-      interactive: true,
-    });
-
-    // Keyboard spanning C4-C5.
-    const kb = new KBc(kbHost, {
-      low: "C4", high: "C5",
-      highlight: hiMidiUniq.map(function (m) { return KBc.sciOf(m); }),
-      labels: "naturals",
-    });
-
-    // --- Bracket overlay ---------------------------------------------------
-    const SVGNS = "http://www.w3.org/2000/svg";
-    function mksvg(tag, attrs) {
-      const e = document.createElementNS(SVGNS, tag);
-      if (attrs) for (const k in attrs) e.setAttribute(k, attrs[k]);
-      return e;
-    }
-
-    const bracketH = 44;
-    const TIP_Y   = 24;
-    const TEXT_Y  = 38;
-
-    function drawBrackets() {
-      const old = kbWrap.querySelector(".mte-stepview__brackets");
-      if (old) old.remove();
-
-      const kbEl   = kbHost.querySelector(".mk-keyboard") || kbHost;
-      const kbRect = kbEl.getBoundingClientRect();
-      if (!kbRect.width) return;
-
-      const svgW = kbRect.width;
-      const bracketSvg = mksvg("svg", {
-        class: "mte-stepview__brackets",
-        viewBox: "0 0 " + svgW + " " + bracketH,
-        width: svgW, height: bracketH,
-        style: "display:block;overflow:visible;",
-      });
-
-      pairs.forEach(function ({ from, to, diff }) {
-        const k1El = kbHost.querySelector('[data-midi="' + from + '"]');
-        const k2El = kbHost.querySelector('[data-midi="' + to   + '"]');
-        if (!k1El || !k2El) return;
-
-        const r1  = k1El.getBoundingClientRect();
-        const r2  = k2El.getBoundingClientRect();
-        const x1  = r1.left + r1.width / 2 - kbRect.left;
-        const x2  = r2.left + r2.width / 2 - kbRect.left;
-        const xM  = (x1 + x2) / 2;
-
-        // Per-pair colour and label.
-        const isHalfPair  = diff === 1;
-        const col         = isHalfPair ? "var(--warn,#ffb700)" : "var(--accent,#5555ff)";
-        const pairLabel   = isHalfPair ? "½ step" : "1 step";
-
-        bracketSvg.appendChild(mksvg("line", {
-          class: "mte-bracket-line", x1: x1, y1: 2, x2: xM, y2: TIP_Y,
-          stroke: col, "stroke-width": "1.5", "stroke-linecap": "round",
-        }));
-        bracketSvg.appendChild(mksvg("line", {
-          class: "mte-bracket-line", x1: x2, y1: 2, x2: xM, y2: TIP_Y,
-          stroke: col, "stroke-width": "1.5", "stroke-linecap": "round",
-        }));
-        bracketSvg.appendChild(mksvg("line", {
-          class: "mte-bracket-stem", x1: xM, y1: TIP_Y, x2: xM, y2: TEXT_Y - 4,
-          stroke: col, "stroke-width": "1.5",
-        }));
-        const t = mksvg("text", {
-          class: "mte-bracket-label",
-          x: xM, y: TEXT_Y + 4,
-          "text-anchor": "middle", "dominant-baseline": "alphabetic",
-          fill: col,
-        });
-        t.textContent = pairLabel;
-        bracketSvg.appendChild(t);
-      });
-
-      kbWrap.appendChild(bracketSvg);
-    }
-
-    requestAnimationFrame(function () { requestAnimationFrame(drawBrackets); });
-
-    // Sync: note_played from either highlights both.
-    el.addEventListener("mtheory:note_played", function (ev) {
-      const p = ev.detail && ev.detail.payload;
-      if (!p || p.midi == null) return;
-      const src = ev.detail.source;
-      if (src !== "chromacircle") circle.setHighlightMidi(new Set([p.midi]));
-      if (src !== "keyboard") kb.setHighlight(KBc.sciOf(p.midi));
-    });
-
-    return { keyboard: kb, circle: circle,
-      destroy: function () { kb.destroy(); circle.destroy(); } };
+    return new global.MtheoryStepView(el, props || {});
   });
-
+  
   // Grand staff — treble + bass clef in one widget.  Both staves are
   // separated by exactly one line-gap; C4 (middle C) sits on the shared
   // ledger between them.  Notes can span the full guitar range (E2–E5).
@@ -1004,6 +854,54 @@
       return null;
     }
     return new global.MtheoryGrandStaff(el, props || {});
+  });
+
+  // Minor Scale Comparison — tab-based widget showing all four minor forms with
+  // altered degrees highlighted in amber vs the parallel major.
+  MtheoryEngine.register("minorscaleview", function (el, props) {
+    if (!global.MtheoryMinorScaleView) {
+      el.textContent = "[MtheoryMinorScaleView not loaded]";
+      return null;
+    }
+    return new global.MtheoryMinorScaleView(el, props || {});
+  });
+
+  // Key Signature Flashcard Quiz — staff or text prompt, keyboard input.
+  MtheoryEngine.register("keysigquiz", function (el, props) {
+    if (!global.MtheoryKeysigQuiz) {
+      el.textContent = "[MtheoryKeysigQuiz not loaded]";
+      return null;
+    }
+    return new global.MtheoryKeysigQuiz(el, props || {});
+  });
+
+  // Multiple Choice Question — immediate red/green feedback, emits quiz_answered.
+  MtheoryEngine.register("mcq", function (el, props) {
+    if (!global.MtheoryMCQ) {
+      el.textContent = "[MtheoryMCQ not loaded]";
+      return null;
+    }
+    return new global.MtheoryMCQ(el, props || {});
+  });
+
+  // Key Signature Explorer — interactive staff showing accidentals 0–7,
+  // with slider + sharps/flats toggle and the key-derivation rule highlighted.
+  MtheoryEngine.register("keysigview", function (el, props) {
+    if (!global.MtheoryKeySigView) {
+      el.textContent = "[MtheoryKeySigView not loaded]";
+      return null;
+    }
+    return new global.MtheoryKeySigView(el, props || {});
+  });
+
+  // Circle of Fifths — 12 keys by perfect fifth, C at top, sharps right,
+  // flats left, enharmonic pairs at the bottom. Click a key for its accidentals.
+  MtheoryEngine.register("fifthscircle", function (el, props) {
+    if (!global.MtheoryFifthsCircle) {
+      el.textContent = "[MtheoryFifthsCircle not loaded]";
+      return null;
+    }
+    return new global.MtheoryFifthsCircle(el, props || {});
   });
 
   global.MtheoryEngine = MtheoryEngine;
