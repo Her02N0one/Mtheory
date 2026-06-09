@@ -368,6 +368,16 @@
       });
     }
 
+    // Remove all currently-lingering dots immediately (timers cancelled).
+    clearLinger() {
+      this._lingerMidi.forEach(function (id) { clearTimeout(id); });
+      this._lingerMidi.clear();
+      this._cellEls.forEach(function (el) {
+        var dot = el.querySelector(".mf-dot--linger");
+        if (dot && dot.parentNode) dot.parentNode.removeChild(dot);
+      });
+    }
+
     destroy() {
       this._lingerMidi.forEach(function (id) { clearTimeout(id); });
       this._lingerMidi.clear();

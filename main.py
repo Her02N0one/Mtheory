@@ -100,6 +100,11 @@ async def fretboard_page(
     )
 
 
+@app.get("/jam", response_class=HTMLResponse)
+async def jam_page(request: Request):
+    return templates.TemplateResponse(request, "jam.html", {})
+
+
 import os
 
 

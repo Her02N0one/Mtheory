@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Mtheory | Jam Helper{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="/static/css/keyboard.css?v=10">
+  <link rel="stylesheet" href="/static/css/fretboard.css?v=4">
+  <link rel="stylesheet" href="/static/css/jam.css?v=1">
+  <style>
+    /* Let the jam page use the full viewport — override main's padding */
+    main { padding: 0; max-width: none; }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="jam-page">
+
+  <!-- ── Controls strip ─────────────────────────────────────── -->
+  <div class="jam-controls">
+    <span class="jam-title">Jam Helper</span>
+
+    <div class="jam-group">
+      <span>Linger</span>
+      <button class="jam-dur-btn" data-ms="1500">1.5s</button>
+      <button class="jam-dur-btn active" data-ms="3500">3.5s</button>
+      <button class="jam-dur-btn" data-ms="6000">6s</button>
+      <button class="jam-dur-btn" data-ms="12000">12s</button>
+    </div>
+
+    <div class="jam-group">
+      <span>Labels</span>
+      <button class="jam-labels-btn active" data-mode="names">Names</button>
+      <button class="jam-labels-btn" data-mode="none">None</button>
+    </div>
+
+    <button class="jam-clear-btn" id="jam-clear">Clear all</button>
+  </div>
+
+  <!-- ── Active notes display ───────────────────────────────── -->
+  <div class="jam-notes-bar" id="jam-notes-bar">
+    <span class="jam-notes-label">Active</span>
+    <span id="jam-notes-empty" style="font-size:0.8rem;color:var(--muted)">
+      Play notes on the keyboard to see them appear here and on the neck&hellip;
+    </span>
+  </div>
+
+  <!-- ── Guitar fretboard ───────────────────────────────────── -->
+  <div class="jam-fretboard-wrap">
+    <div id="jam-fretboard"></div>
+  </div>
+
+  <!-- ── Piano keyboard ─────────────────────────────────────── -->
+  <div class="jam-keyboard-wrap">
+    <div id="jam-keyboard"></div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="/static/js/components/keyboard.js?v=10"></script>
+  <script src="/static/js/components/fretboard.js?v=6"></script>
+  <script>
+  (function () {
+    "use strict";
+
+    var KB   = window.MtheoryKeyboard;
+    var FB   = window.MtheoryFretboard;
+    var kb   = null;
+    var fb   = null;
+
+    // ── State ─────────────────────────────────────────────────
+    var lingerMs   = 3500;
+    var showNames  = true;
+    // Parallel linger tracking for the notes bar display.
+    // midi -> { timeoutId, chipEl }
+    var activeChips = new Map();
+
+    // ── Init ──────────────────────────────────────────────────
+    document.addEventListener("DOMContentLoaded", function () {
+      buildFretboard();
+      buildKeyboard();
+      wireControls();
+    });
+
+    function buildFretboard() {
+      if (fb) { fb.destroy(); }
+      fb = new FB(document.getElementById("jam-fretboard"), {
+        frets:    15,
+        labels:   "marks",
+        lingerMs: lingerMs,
+        audio:    false,  // keyboard handles audio; fret clicks still play via keyboard
+      });
+      // Re-enable audio through the keyboard's synth so fret clicks also sound.
+      fb._play = function (midi, freq) {
+        if (KB && KB.pluck) KB.pluck(midi, freq);
+      };
+    }
+
+    function buildKeyboard() {
+      if (kb) { kb.destroy(); }
+      kb = new KB(document.getElementById("jam-keyboard"), {
+        low:    "E2",
+        high:   "E5",
+        labels: "naturals",
+      });
+    }
+
+    // ── Sync: keyboard → fretboard ────────────────────────────
+    document.getElementById("jam-fretboard").addEventListener(
+      "mtheory:fret_played", function (ev) {
+        var m = ev.detail && ev.detail.payload && ev.detail.payload.midi;
+        if (m == null) return;
+        activateNote(m);
+        if (kb) kb.setHighlight(KB.sciOf(m));
+      }
+    );
+
+    document.getElementById("jam-keyboard").addEventListener(
+      "mtheory:note_played", function (ev) {
+        var m = ev.detail && ev.detail.payload && ev.detail.payload.midi;
+        if (m == null) return;
+        activateNote(m);
+        if (fb) fb.lingerNote(m, lingerMs);
+      }
+    );
+
+    // ── Note activation (fretboard display + notes bar) ───────
+    function activateNote(midi) {
+      // Reset linger timer for this note in the display.
+      if (activeChips.has(midi)) {
+        clearTimeout(activeChips.get(midi).tid);
+        // Ensure the chip is visible again if it was fading.
+        activeChips.get(midi).chip.classList.remove("fading");
+      } else {
+        var chip = buildChip(midi);
+        document.getElementById("jam-notes-bar").appendChild(chip);
+        document.getElementById("jam-notes-empty").style.display = "none";
+        activeChips.set(midi, { chip: chip, tid: null });
+      }
+
+      var entry = activeChips.get(midi);
+      entry.tid = setTimeout(function () {
+        // Start fade, then remove.
+        entry.chip.classList.add("fading");
+        setTimeout(function () {
+          if (entry.chip.parentNode) entry.chip.parentNode.removeChild(entry.chip);
+          activeChips.delete(midi);
+          if (activeChips.size === 0) {
+            document.getElementById("jam-notes-empty").style.display = "";
+          }
+        }, 420);
+      }, lingerMs);
+    }
+
+    function buildChip(midi) {
+      var name  = KB.nameOf(midi);
+      var style = KB.noteStyle(name);
+      var chip  = document.createElement("span");
+      chip.className = "jam-note-chip";
+      chip.style.background = style ? style.color : "#444";
+      chip.style.color = style ? KB.readableText(style.color) : "#fff";
+      chip.textContent = showNames ? (name + octaveLabel(midi)) : "●";
+      chip.dataset.midi = String(midi);
+      return chip;
+    }
+
+    function octaveLabel(midi) {
+      return String(Math.floor(midi / 12) - 1);
+    }
+
+    // ── Controls wiring ───────────────────────────────────────
+    function wireControls() {
+      // Linger duration buttons.
+      document.querySelectorAll(".jam-dur-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          lingerMs = parseInt(btn.dataset.ms, 10);
+          document.querySelectorAll(".jam-dur-btn").forEach(function (b) {
+            b.classList.toggle("active", b === btn);
+          });
+          // Rebuild fretboard so new lingerMs is passed to constructor.
+          buildFretboard();
+        });
+      });
+
+      // Label mode buttons.
+      document.querySelectorAll(".jam-labels-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          showNames = btn.dataset.mode === "names";
+          document.querySelectorAll(".jam-labels-btn").forEach(function (b) {
+            b.classList.toggle("active", b === btn);
+          });
+          // Update existing chips.
+          activeChips.forEach(function (entry, midi) {
+            var name  = KB.nameOf(midi);
+            entry.chip.textContent = showNames ? (name + octaveLabel(midi)) : "●";
+          });
+        });
+      });
+
+      // Clear button.
+      document.getElementById("jam-clear").addEventListener("click", function () {
+        if (fb) fb.clearLinger();
+        // Cancel all chip timers and remove chips.
+        activeChips.forEach(function (entry) {
+          clearTimeout(entry.tid);
+          if (entry.chip.parentNode) entry.chip.parentNode.removeChild(entry.chip);
+        });
+        activeChips.clear();
+        document.getElementById("jam-notes-empty").style.display = "";
+        if (kb) kb.setHighlight(null);
+      });
+    }
+
+  })();
+  </script>
+{% endblock %}

@@ -1,0 +1,160 @@
+/* jam.css — Jam Helper page
+ * Full-viewport layout: controls → active notes → fretboard → keyboard */
+
+/* ── Page shell ────────────────────────────────────────────────────────── */
+.jam-page {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 48px); /* subtract nav height */
+  gap: 0;
+  padding: 0;
+  max-width: none;             /* override main's max-width */
+}
+
+/* ── Controls strip ────────────────────────────────────────────────────── */
+.jam-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.jam-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin-right: 4px;
+}
+
+.jam-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.jam-dur-btn {
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.jam-dur-btn:hover { background: var(--bg-hover); color: var(--text); }
+.jam-dur-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.jam-labels-btn {
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.jam-labels-btn.active {
+  background: var(--bg-hover);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.jam-clear-btn {
+  padding: 3px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: auto;
+  transition: background 0.12s, color 0.12s;
+}
+.jam-clear-btn:hover { background: var(--error); border-color: var(--error); color: #fff; }
+
+/* ── Active notes bar ──────────────────────────────────────────────────── */
+.jam-notes-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  min-height: 42px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+
+.jam-notes-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
+.jam-note-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.4;
+  transition: opacity 0.4s ease-out;
+}
+.jam-note-chip.fading { opacity: 0; }
+
+/* ── Fretboard section ─────────────────────────────────────────────────── */
+.jam-fretboard-wrap {
+  flex: 1 1 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 12px 16px 8px;
+}
+
+.jam-fretboard-wrap .mf-fretboard {
+  max-width: none;   /* go full width */
+  width: 100%;
+}
+
+/* Taller rows for breathing room */
+.jam-fretboard-wrap .mf-row {
+  height: 56px;
+}
+
+/* Larger linger dots to match the taller rows */
+.jam-fretboard-wrap .mf-dot {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+
+/* ── Keyboard section ──────────────────────────────────────────────────── */
+.jam-keyboard-wrap {
+  flex-shrink: 0;
+  padding: 8px 16px 12px;
+  background: var(--bg-card);
+  border-top: 1px solid var(--border);
+}
