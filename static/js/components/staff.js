@@ -1,26 +1,43 @@
-/* staff.js — Treble-clef staff widget (Staff class)
- * ───────────────────────────────────────────────────
+/* staff.js — Staff widget: treble, guitar-8va, or grand (treble+bass)
+ * ─────────────────────────────────────────────────────────────────────
  * TABLE OF CONTENTS
  *   § Geometry        — SVG coordinate constants (NOTE_DX = 34)
  *   § Constructor     — parse opts, resolve notes, call render()
- *   § render()        — build SVG: 5 staff lines, clef, noteheads
- *   § _renderClef()   — treble / guitar-8 clef glyph
+ *   § render()        — build SVG: staff lines, clef(s), noteheads
+ *   § _renderClef()   — dispatch to treble / guitar-8 / bass clef
  *   § _renderNote()   — notehead + ledger lines + accidental + label + click
- *   § _ledgerLines()  — draw ledger lines above/below staff
+ *   § _ledgerLines()  — draw ledger lines above/below staff (or grand zones)
  *   § _press()        — handle click/trigger: play + emit
  *   § _emit()         — fire DOM CustomEvent + onEvent callback
  *   § _emitQuiz()     — quiz-mode answer event
- *   § Public API      — setNotes(), setHighlight(), setQuiz(), triggerNote(),
- *                       flashNote(), destroy()
+ *   § Public API      — setNotes(), setHighlight(), setHighlightMidi(),
+ *                       setQuiz(), triggerNote(), flashNote(), destroy()
+ *
+ * clef options
+ * ─────────────
+ *   "treble"  — standard treble clef (G clef).  Default.
+ *   "guitar"  — treble clef with an 8 subscript; notes sound an octave lower
+ *               than written (writtenOffset = +12 MIDI).
+ *   "grand"   — treble staff + bass staff combined (piano grand staff).
+ *               Bottom staff line index 18 (G2); barline connects both staves.
+ *               Middle C (index 28) gets its own ledger line in the gap.
+ *               Replaces the former separate GrandStaff widget.
  *
  * Vertical layout — treble clef:
  *   diatonic index = octave*7 + letterStep   (C=0 D=1 E=2 F=3 G=4 A=5 B=6)
  *   bottom staff line = E4 (index 30); each diatonic step = half a line gap.
  *   middle C4 (index 28) sits on the first ledger line below the staff.
  *
- * See also: grandstaff.js (GrandStaff — treble + bass combined)
+ * Grand staff Y reference (same formula, two stave groups):
+ *   F5 (38) → y= 46  — treble top
+ *   E4 (30) → y= 94  — treble bottom
+ *   C4 (28) → y=106  — middle-C ledger (in the gap)
+ *   A3 (26) → y=118  — bass top
+ *   G2 (18) → y=166  — bass bottom
+ *
  * Depends on:  keyboard.js → window.MtheoryKeyboard
  * Exports:     window.MtheoryStaff
+ *              window.MtheoryGrandStaff  (alias: new Staff(el, {clef:"grand", ...props}))
  */
 (function (global) {
   "use strict";
@@ -85,8 +102,14 @@
       if (!this.root) throw new Error("Staff: container not found");
 
       const k = KB();
-      this.lowMidi     = k.midiOfSci(opts.low  || "C4");
-      this.highMidi    = k.midiOfSci(opts.high || "A5");
+      this.clef = opts.clef || "treble";
+
+      // Grand staff defaults to a wider range spanning both staves.
+      const defaultLow  = this.clef === "grand" ? "E2" : "C4";
+      const defaultHigh = this.clef === "grand" ? "E5" : "A5";
+      this.lowMidi     = k.midiOfSci(opts.low  || defaultLow);
+      this.highMidi    = k.midiOfSci(opts.high || defaultHigh);
+
       this.labels      = opts.labels || "names";
       this.interactive = opts.interactive !== false;
       this.emitDom     = opts.emitDom !== false;
@@ -102,7 +125,6 @@
       this.quizTargetMidi  = this.quiz && this.quiz.targetMidi != null ? this.quiz.targetMidi : null;
 
       // Guitar clef: display notes at written pitch (midi+12), emit at sounding pitch.
-      this.clef          = opts.clef || "treble";
       this.writtenOffset = this.clef === "guitar" ? 12 : 0;
 
       this.notes   = this._resolveNotes(opts.notes);
@@ -138,20 +160,27 @@
 
     render() {
       this.root.classList.add("ms-staff");
+      this.root.classList.toggle("ms-staff--grand", this.clef === "grand");
       this.root.innerHTML = "";
       this._noteEls.clear();
 
-      // Reserve min `cols` columns so a single-note staff keeps stable proportions.
       const cols  = Math.max(this.notes.length, this.cols || 0, 1);
       const width = STAFF_X0 + CLEF_W + cols * NOTE_DX + 16;
 
-      // Expand height if guitar clef pushes notes below the staff.
-      const loWrittenIdx = this.notes.length
-        ? Math.min(...this.notes.map(m => diatonicIndex(m + this.writtenOffset)))
-        : BOTTOM_INDEX;
-      const loY          = yForIndex(loWrittenIdx);
-      this._labelY       = Math.max(BOTTOM_Y + GAP * 3.0, loY + GAP * 2.5);
-      const height       = Math.max(150, this._labelY + 20);
+      let height;
+      if (this.clef === "grand") {
+        // Fixed grand-staff height; label row sits below the bass staff.
+        height       = 220;
+        this._labelY = yForIndex(18) + GAP * 2.5;
+      } else {
+        // Expand height if guitar clef pushes notes below the treble staff.
+        const loWrittenIdx = this.notes.length
+          ? Math.min(...this.notes.map(m => diatonicIndex(m + this.writtenOffset)))
+          : BOTTOM_INDEX;
+        const loY    = yForIndex(loWrittenIdx);
+        this._labelY = Math.max(BOTTOM_Y + GAP * 3.0, loY + GAP * 2.5);
+        height       = Math.max(150, this._labelY + 20);
+      }
 
       const el = svg("svg", {
         class: "ms-svg",
@@ -162,9 +191,28 @@
       this._svg   = el;
       this._width = width;
 
-      for (let i = 0; i < 5; i++) {
-        const y = TOP_Y + i * GAP;
-        el.appendChild(svg("line", { class: "ms-line", x1: STAFF_X0, y1: y, x2: width - 8, y2: y }));
+      if (this.clef === "grand") {
+        // Treble staff lines: E4 G4 B4 D5 F5 (diatonic indices 30 32 34 36 38)
+        [30, 32, 34, 36, 38].forEach(idx => {
+          const y = yForIndex(idx);
+          el.appendChild(svg("line", { class: "ms-line", x1: STAFF_X0, y1: y, x2: width - 8, y2: y }));
+        });
+        // Bass staff lines: G2 B2 D3 F3 A3 (diatonic indices 18 20 22 24 26)
+        [18, 20, 22, 24, 26].forEach(idx => {
+          const y = yForIndex(idx);
+          el.appendChild(svg("line", { class: "ms-line", x1: STAFF_X0, y1: y, x2: width - 8, y2: y }));
+        });
+        // Barline connecting treble top → bass bottom
+        el.appendChild(svg("line", {
+          class: "ms-barline",
+          x1: STAFF_X0, y1: yForIndex(38),
+          x2: STAFF_X0, y2: yForIndex(18),
+        }));
+      } else {
+        for (let i = 0; i < 5; i++) {
+          const y = TOP_Y + i * GAP;
+          el.appendChild(svg("line", { class: "ms-line", x1: STAFF_X0, y1: y, x2: width - 8, y2: y }));
+        }
       }
 
       this._renderClef(el);
@@ -181,16 +229,12 @@
     // === § _RENDERCLEF ========================================================
 
     _renderClef(parent) {
-      const gLineY = yForIndex(32); // G4 line
-      const t = svg("text", {
-        class: "ms-clef-glyph",
-        x: STAFF_X0 + 8,
-        y: gLineY + GAP * 0.78,
-        "font-size": GAP * 5,
-      });
-      t.textContent = "𝄞";
-      parent.appendChild(t);
-
+      if (this.clef === "grand") {
+        this._renderTrebleClef(parent);
+        this._renderBassClef(parent);
+        return;
+      }
+      this._renderTrebleClef(parent);
       // Guitar clef: "8" subscript below the clef tail.
       if (this.clef === "guitar") {
         const eight = svg("text", {
@@ -203,6 +247,31 @@
         eight.textContent = "8";
         parent.appendChild(eight);
       }
+    }
+
+    _renderTrebleClef(parent) {
+      const gLineY = yForIndex(32); // G4 line
+      const t = svg("text", {
+        class: "ms-clef-glyph",
+        x: STAFF_X0 + 8,
+        y: gLineY + GAP * 0.78,
+        "font-size": GAP * 5,
+      });
+      t.textContent = "𝄞";
+      parent.appendChild(t);
+    }
+
+    // F-clef glyph positioned so its dots straddle the F3 line (index 24).
+    _renderBassClef(parent) {
+      const fLineY = yForIndex(24);
+      const t = svg("text", {
+        class: "ms-clef-glyph ms-clef-glyph--bass",
+        x: STAFF_X0 + 10,
+        y: fLineY + GAP * 1.8,
+        "font-size": GAP * 4,
+      });
+      t.textContent = "𝄢";
+      parent.appendChild(t);
     }
 
     // === § _RENDERNOTE ========================================================
@@ -245,7 +314,8 @@
       }
 
       if (this.interactive) {
-        const hit = svg("rect", { class: "ms-hit", x: x - NOTE_DX / 2, y: 4, width: NOTE_DX, height: 142, fill: "transparent" });
+        const hitH = this.clef === "grand" ? 212 : 142;
+        const hit = svg("rect", { class: "ms-hit", x: x - NOTE_DX / 2, y: 4, width: NOTE_DX, height: hitH, fill: "transparent" });
         g.appendChild(hit);
         g.classList.add("ms-note--play");
         g.addEventListener("pointerdown", ev => { ev.preventDefault(); this._press(midi, g); });
@@ -259,16 +329,18 @@
 
     _ledgerLines(parent, index, x) {
       const w = NOTE_R + 4;
-      if (index <= 28) {
-        for (let i = 28; i >= index; i -= 2) {
-          const y = yForIndex(i);
-          parent.appendChild(svg("line", { class: "ms-ledger", x1: x - w, y1: y, x2: x + w, y2: y }));
-        }
-      } else if (index >= 40) {
-        for (let i = 40; i <= index; i += 2) {
-          const y = yForIndex(i);
-          parent.appendChild(svg("line", { class: "ms-ledger", x1: x - w, y1: y, x2: x + w, y2: y }));
-        }
+      const line = i => {
+        const y = yForIndex(i);
+        parent.appendChild(svg("line", { class: "ms-ledger", x1: x - w, y1: y, x2: x + w, y2: y }));
+      };
+      if (this.clef === "grand") {
+        // Three zones: above treble top (F5), middle-C ledger in the gap, below bass bottom (G2).
+        if (index > 38) { for (let i = 40; i <= index; i += 2) line(i); }
+        if (index === 28) line(28); // middle C
+        if (index < 18)  { for (let i = 16; i >= index; i -= 2) line(i); }
+      } else {
+        if (index <= 28) { for (let i = 28; i >= index; i -= 2) line(i); }
+        else if (index >= 40) { for (let i = 40; i <= index; i += 2) line(i); }
       }
     }
 
@@ -356,5 +428,11 @@
   Staff.diatonicIndex = diatonicIndex;
 
   global.MtheoryStaff = Staff;
+
+  // MtheoryGrandStaff: convenience alias — equivalent to Staff with clef:"grand".
+  // Preserves backwards compatibility; the grandstaff.js file is no longer needed.
+  global.MtheoryGrandStaff = function GrandStaff(el, props) {
+    return new Staff(el, Object.assign({ clef: "grand" }, props || {}));
+  };
 
 })(window);
