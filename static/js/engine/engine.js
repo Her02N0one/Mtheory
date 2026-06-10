@@ -5,8 +5,9 @@
  * flag/expr becomes true. This is the State Machine + Renderer from
  * CONTENT_ENGINE.md §1b/1c, kept minimal for the first working loop.
  *
- * Widget registry: maps a widget name -> mount(el, props, engine). Register the
- * Keyboard via MtheoryEngine.register("keyboard", ...) (done at bottom).
+ * Widget registry: maps a widget name -> mount(el, props, engine). Simple
+ * widgets use autoRegister(name, globalKey); compound widgets with custom sync
+ * logic use MtheoryEngine.register(name, fn) directly (both at bottom).
  */
 (function (global) {
   "use strict";
@@ -647,23 +648,34 @@
   // `init` is an alias of `run` (the server template boots via init()).
   MtheoryEngine.init = MtheoryEngine.run;
 
-  // Built-in widget registration: Keyboard.
-  MtheoryEngine.register("keyboard", function (el, props) {
-    if (!global.MtheoryKeyboard) {
-      el.textContent = "[MtheoryKeyboard not loaded]";
-      return null;
-    }
-    return new global.MtheoryKeyboard(el, props || {});
-  });
+  // ---------------------------------------------------------------------------
+  // Widget registration helpers
+  // ---------------------------------------------------------------------------
+  // autoRegister handles the common case: one global constructor, no custom
+  // setup.  Pass the widget name and the global key (e.g. "MtheoryKeyboard").
+  // Compound widgets with custom wiring (companion, staffcompanion) are
+  // registered explicitly below.
+  function autoRegister(name, globalKey) {
+    REGISTRY[name] = function (el, props) {
+      var Cls = global[globalKey];
+      if (!Cls) { el.textContent = "[" + globalKey + " not loaded]"; return null; }
+      return new Cls(el, props || {});
+    };
+  }
 
-  // Fretboard widget — emits fret_played / fret_quizzed (§1d).
-  MtheoryEngine.register("fretboard", function (el, props) {
-    if (!global.MtheoryFretboard) {
-      el.textContent = "[MtheoryFretboard not loaded]";
-      return null;
-    }
-    return new global.MtheoryFretboard(el, props || {});
-  });
+  autoRegister("keyboard",       "MtheoryKeyboard");
+  autoRegister("fretboard",      "MtheoryFretboard");
+  autoRegister("staff",          "MtheoryStaff");
+  autoRegister("scaleview",      "MtheoryScaleView");
+  autoRegister("keyview",        "MtheoryKeyView");
+  autoRegister("chromacircle",   "MtheoryChromaCircle");
+  autoRegister("stepview",       "MtheoryStepView");
+  autoRegister("grandstaff",     "MtheoryGrandStaff");
+  autoRegister("minorscaleview", "MtheoryMinorScaleView");
+  autoRegister("keysigquiz",     "MtheoryKeysigQuiz");
+  autoRegister("mcq",            "MtheoryMCQ");
+  autoRegister("keysigview",     "MtheoryKeySigView");
+  autoRegister("fifthscircle",   "MtheoryFifthsCircle");
 
   // Companion widget — keyboard + fretboard, synced by absolute MIDI. Playing a
   // note on one instrument lights its unisons on the other (and vice versa).
@@ -716,15 +728,6 @@
     }
     return { keyboard: kb, fretboard: fb,
       destroy() { kb.destroy(); fb.destroy(); } };
-  });
-
-  // Staff widget — a treble-clef staff (playable by default; emits note_played).
-  MtheoryEngine.register("staff", function (el, props) {
-    if (!global.MtheoryStaff) {
-      el.textContent = "[MtheoryStaff not loaded]";
-      return null;
-    }
-    return new global.MtheoryStaff(el, props || {});
   });
 
   // Staff companion — keyboard + treble staff, synced by absolute MIDI. Playing
@@ -805,104 +808,7 @@
       destroy() { kb.destroy(); st.destroy(); if (fb) fb.destroy(); } };
   });
 
-  // Scale view — step-pattern staff with W/H brackets + degree labels.
-  MtheoryEngine.register("scaleview", function (el, props) {
-    if (!global.MtheoryScaleView) {
-      el.textContent = "[MtheoryScaleView not loaded]";
-      return null;
-    }
-    return new global.MtheoryScaleView(el, props || {});
-  });
-
-  // Key view — keyboard-first scale visualisation with letter names + W/H brackets.
-  MtheoryEngine.register("keyview", function (el, props) {
-    if (!global.MtheoryKeyView) {
-      el.textContent = "[MtheoryKeyView not loaded]";
-      return null;
-    }
-    return new global.MtheoryKeyView(el, props || {});
-  });
-
-  // Chromatic circle — 12 notes as coloured nodes, optional step arc.
-  MtheoryEngine.register("chromacircle", function (el, props) {
-    if (!global.MtheoryChromaCircle) {
-      el.textContent = "[MtheoryChromaCircle not loaded]";
-      return null;
-    }
-    return new global.MtheoryChromaCircle(el, props || {});
-  });
-
-  // Step view — chromatic circle + keyboard side by side, both highlighting
-  // the `from` note and the note a half/whole step away.  Synced on click.
-// Step view — chromatic circle + keyboard side by side, both highlighting
-  // the `from` note and the note a half/whole step away.  Synced on click.
-  // Step view — isolated whole/half steps orchestrated across instruments.
-  MtheoryEngine.register("stepview", function (el, props) {
-    if (!global.MtheoryStepView) {
-      el.textContent = "[MtheoryStepView not loaded]";
-      return null;
-    }
-    return new global.MtheoryStepView(el, props || {});
-  });
-  
-  // Grand staff — treble + bass clef in one widget.  Both staves are
-  // separated by exactly one line-gap; C4 (middle C) sits on the shared
-  // ledger between them.  Notes can span the full guitar range (E2–E5).
-  MtheoryEngine.register("grandstaff", function (el, props) {
-    if (!global.MtheoryGrandStaff) {
-      el.textContent = "[MtheoryGrandStaff not loaded]";
-      return null;
-    }
-    return new global.MtheoryGrandStaff(el, props || {});
-  });
-
-  // Minor Scale Comparison — tab-based widget showing all four minor forms with
-  // altered degrees highlighted in amber vs the parallel major.
-  MtheoryEngine.register("minorscaleview", function (el, props) {
-    if (!global.MtheoryMinorScaleView) {
-      el.textContent = "[MtheoryMinorScaleView not loaded]";
-      return null;
-    }
-    return new global.MtheoryMinorScaleView(el, props || {});
-  });
-
-  // Key Signature Flashcard Quiz — staff or text prompt, keyboard input.
-  MtheoryEngine.register("keysigquiz", function (el, props) {
-    if (!global.MtheoryKeysigQuiz) {
-      el.textContent = "[MtheoryKeysigQuiz not loaded]";
-      return null;
-    }
-    return new global.MtheoryKeysigQuiz(el, props || {});
-  });
-
-  // Multiple Choice Question — immediate red/green feedback, emits quiz_answered.
-  MtheoryEngine.register("mcq", function (el, props) {
-    if (!global.MtheoryMCQ) {
-      el.textContent = "[MtheoryMCQ not loaded]";
-      return null;
-    }
-    return new global.MtheoryMCQ(el, props || {});
-  });
-
-  // Key Signature Explorer — interactive staff showing accidentals 0–7,
-  // with slider + sharps/flats toggle and the key-derivation rule highlighted.
-  MtheoryEngine.register("keysigview", function (el, props) {
-    if (!global.MtheoryKeySigView) {
-      el.textContent = "[MtheoryKeySigView not loaded]";
-      return null;
-    }
-    return new global.MtheoryKeySigView(el, props || {});
-  });
-
-  // Circle of Fifths — 12 keys by perfect fifth, C at top, sharps right,
-  // flats left, enharmonic pairs at the bottom. Click a key for its accidentals.
-  MtheoryEngine.register("fifthscircle", function (el, props) {
-    if (!global.MtheoryFifthsCircle) {
-      el.textContent = "[MtheoryFifthsCircle not loaded]";
-      return null;
-    }
-    return new global.MtheoryFifthsCircle(el, props || {});
-  });
+  // Compound widgets with custom sync wiring are registered explicitly below.
 
   global.MtheoryEngine = MtheoryEngine;
 })(window);
