@@ -666,10 +666,23 @@
   autoRegister("keyboard",       "MtheoryKeyboard");
   autoRegister("fretboard",      "MtheoryFretboard");
   autoRegister("staff",          "MtheoryStaff");
-  autoRegister("scaleview",      "MtheoryScaleView");
+  // scaleview: unified scale-visualisation widget.
+  //   view:"staff"    (default) — treble staff with V-bracket intervals (MtheoryScaleView)
+  //   view:"keyboard"           — keyboard + SVG overlay + optional fretboard (MtheoryKeyView)
+  //   view:"keyboard" is identical to the legacy "keyview" name, which still works.
+  REGISTRY["scaleview"] = function (el, props) {
+    props = props || {};
+    var isKb = props.view === "keyboard";
+    var Cls  = isKb ? global.MtheoryKeyView : global.MtheoryScaleView;
+    var key  = isKb ? "MtheoryKeyView" : "MtheoryScaleView";
+    if (!Cls) { el.textContent = "[" + key + " not loaded]"; return null; }
+    return new Cls(el, props);
+  };
+  // keyview: backwards-compatible alias for scaleview {view:"keyboard"}.
   autoRegister("keyview",        "MtheoryKeyView");
   autoRegister("chromacircle",   "MtheoryChromaCircle");
   autoRegister("stepview",       "MtheoryStepView");
+  // grandstaff: alias for staff {clef:"grand"} — MtheoryGrandStaff is exported by staff.js.
   autoRegister("grandstaff",     "MtheoryGrandStaff");
   autoRegister("minorscaleview", "MtheoryMinorScaleView");
   autoRegister("keysigquiz",     "MtheoryKeysigQuiz");
