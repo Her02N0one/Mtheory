@@ -1,0 +1,75 @@
+/* degquiz.css — Scale Degree Name Drill widget -------------------------------- */
+
+.mdq-wrap {
+  background: var(--bg-card, #fff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius-lg, 12px);
+  padding: 20px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Prompt */
+.mdq-prompt {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text, #111);
+  min-height: 28px;
+  line-height: 1.4;
+}
+
+.mdq-cue {
+  color: var(--muted, #6b7280);
+  font-weight: 400;
+}
+
+.mdq-name {
+  font-size: 18px;
+  color: var(--accent, #3b82f6);
+}
+
+.mdq-num {
+  font-size: 13px;
+  color: var(--muted, #9ca3af);
+}
+
+.mdq-done {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent, #3b82f6);
+}
+
+/* Keyboard host */
+.mdq-kb {
+  /* keyboard fills this naturally */
+}
+
+/* Feedback flash */
+.mdq-feedback {
+  font-size: 15px;
+  font-weight: 600;
+  min-height: 24px;
+  text-align: center;
+  transition: color 0.2s;
+  color: transparent;
+}
+
+.mdq-feedback--ok {
+  color: var(--success, #22c55e);
+}
+
+/* Progress line */
+.mdq-progress {
+  font-size: 13px;
+  color: var(--muted, #6b7280);
+}
+
+.mdq-prog-correct {
+  font-weight: 700;
+  color: var(--accent, #3b82f6);
+}
+
+.mdq-prog-remain {
+  /* default muted */
+}

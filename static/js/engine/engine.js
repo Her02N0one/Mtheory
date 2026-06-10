@@ -821,6 +821,8 @@
       destroy() { kb.destroy(); st.destroy(); if (fb) fb.destroy(); } };
   });
 
+  autoRegister("degquiz",        "MtheoryDegQuiz");
+
   // Compound widgets with custom sync wiring are registered explicitly below.
 
   global.MtheoryEngine = MtheoryEngine;
