@@ -1,0 +1,723 @@
+{% extends "base.html" %}
+
+{% block title %}Mtheory | Positions{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="/static/css/keyboard.css?v=5">
+  <link rel="stylesheet" href="/static/css/fretboard.css?v=10">
+  <link rel="stylesheet" href="/static/css/positions.css?v=4">
+{% endblock %}
+
+{% block content %}
+<div class="pos-overview">
+
+  <header class="pos-overview__header">
+    <h1 class="pos-overview__title">Positions</h1>
+    <p class="pos-overview__subtitle">
+      Five CAGED shapes — pentatonic and full diatonic, major and relative minor.
+      Each drill: ascending &amp; descending, thirds, then blind from memory.
+    </p>
+  </header>
+
+  <!-- ── CAGED intro ───────────────────────────────────────────────────── -->
+  <section class="pos-caged-intro">
+
+    <div class="pos-intro-cols">
+      <div class="pos-intro-text">
+        <h2 class="pos-intro__h2">The CAGED System</h2>
+        <p>
+          Every guitarist learns five open-chord shapes: <strong>C, A, G, E, D</strong>. Each of those shapes
+          can be moved up the neck with a barre — the notes change, the fingering geometry stays the same.
+          Slide an E-chord shape up 3 frets and you have a G chord. Slide a D shape up 2 frets and you have
+          an E chord.
+        </p>
+        <p>
+          These five shapes tile the neck end-to-end without gaps. In any key, all five appear in sequence
+          as you climb from nut to body — then the cycle repeats an octave higher. Learning all five boxes
+          gives you <strong>full-neck coverage in any key</strong>, and every note you'll ever play belongs
+          to one of the five shapes you already know.
+        </p>
+        <p>
+          The pentatonic scale maps cleanly onto this system: each shape produces a compact
+          <strong>two-notes-per-string box</strong>. Five shapes × 5 notes = a complete pentatonic system
+          from open strings to the 12th fret.
+        </p>
+        <div class="pos-intro-cycle">
+          <span class="pos-intro-cycle__label">Neck order (ascending):</span>
+          <span class="pos-intro-cycle__shapes">
+            <span class="pos-intro-cycle__shape">C</span>
+            <span class="pos-intro-cycle__arrow">→</span>
+            <span class="pos-intro-cycle__shape">A</span>
+            <span class="pos-intro-cycle__arrow">→</span>
+            <span class="pos-intro-cycle__shape">G</span>
+            <span class="pos-intro-cycle__arrow">→</span>
+            <span class="pos-intro-cycle__shape">E</span>
+            <span class="pos-intro-cycle__arrow">→</span>
+            <span class="pos-intro-cycle__shape">D</span>
+            <span class="pos-intro-cycle__arrow">→</span>
+            <span class="pos-intro-cycle__shape pos-intro-cycle__shape--dim">C</span>
+            <span class="pos-intro-cycle__arrow pos-intro-cycle__arrow--dim">→</span>
+            <span class="pos-intro-cycle__shape pos-intro-cycle__shape--dim">···</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="pos-intro-text">
+        <h2 class="pos-intro__h2">Major &amp; Relative Minor</h2>
+        <p>
+          Every major key has a <strong>relative minor</strong> that shares all the same notes. C major and
+          A minor use identical pitches — the scales differ only in which note is the tonal centre.
+          On the fretboard this means the <strong>five box positions are identical</strong>; only the root
+          dots shift.
+        </p>
+        <p>
+          Practicing both perspectives in each box trains your ear to hear the same shapes as either
+          bright (major) or dark (minor). One set of shapes, two tonal colours — one of the most
+          efficient uses of practice time on the guitar.
+        </p>
+        <p>
+          The three key groups here — <strong>C/Am, G/Em, F/Dm</strong> — cover the most common
+          open-position keys and introduce every natural note on the neck before any accidentals.
+        </p>
+      </div>
+    </div>
+
+    <!-- ── Interactive shape explorer ────────────────────────────────── -->
+    <div class="pos-explorer">
+      <h3 class="pos-explorer__title">All Five Shapes</h3>
+      <div class="pos-explorer__bar">
+        <div class="pos-explorer__group">
+          <span class="pos-explorer__label">Key</span>
+          <div class="pos-explorer__btns">
+            <button class="pos-key-btn is-active" data-key="C">C / Am</button>
+            <button class="pos-key-btn" data-key="G">G / Em</button>
+            <button class="pos-key-btn" data-key="F">F / Dm</button>
+          </div>
+        </div>
+        <div class="pos-explorer__group">
+          <span class="pos-explorer__label">Scale</span>
+          <div class="pos-explorer__btns">
+            <button class="pos-scale-btn is-active" data-scale="pentatonic_major">Major pent</button>
+            <button class="pos-scale-btn" data-scale="pentatonic_minor">Minor pent</button>
+            <button class="pos-scale-btn" data-scale="major">Major scale</button>
+            <button class="pos-scale-btn" data-scale="natural_minor">Natural minor</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="pos-explorer__cards-wrap">
+        <div class="pos-explorer__group-label">E &amp; A string roots</div>
+        <div class="pos-explorer__group-label pos-explorer__group-label--bstr">passes the B string</div>
+        <div class="pos-shape-cards" id="pos-shape-cards"><!-- JS --></div>
+      </div>
+
+      <p class="pos-explorer__hint">
+        Bright dots = root &nbsp;·&nbsp; Faint dots = other scale tones &nbsp;·&nbsp;
+        Click <strong>Drill →</strong> to practice that box
+      </p>
+    </div>
+
+    <!-- ── Full-neck CAGED overview ──────────────────────────────────── -->
+    <div class="pos-fullneck">
+      <div class="pos-fullneck__controls">
+        <h3 class="pos-fullneck__title">Full Neck — CAGED System</h3>
+        <div class="pos-fn-selector-group">
+          <span class="pos-fn-label">Key</span>
+          <div class="pos-fn-keys">
+            <button class="pos-fn-key-btn is-active" data-root="0">C</button>
+            <button class="pos-fn-key-btn" data-root="1">C#</button>
+            <button class="pos-fn-key-btn" data-root="2">D</button>
+            <button class="pos-fn-key-btn" data-root="3">Eb</button>
+            <button class="pos-fn-key-btn" data-root="4">E</button>
+            <button class="pos-fn-key-btn" data-root="5">F</button>
+            <button class="pos-fn-key-btn" data-root="6">F#</button>
+            <button class="pos-fn-key-btn" data-root="7">G</button>
+            <button class="pos-fn-key-btn" data-root="8">Ab</button>
+            <button class="pos-fn-key-btn" data-root="9">A</button>
+            <button class="pos-fn-key-btn" data-root="10">Bb</button>
+            <button class="pos-fn-key-btn" data-root="11">B</button>
+          </div>
+        </div>
+        <div class="pos-fn-selector-group">
+          <span class="pos-fn-label">Scale</span>
+          <div class="pos-fn-scales">
+            <button class="pos-fn-scale-btn is-active" data-scale="pentatonic_major">Major pent</button>
+            <button class="pos-fn-scale-btn" data-scale="pentatonic_minor">Minor pent</button>
+            <button class="pos-fn-scale-btn" data-scale="major">Major</button>
+            <button class="pos-fn-scale-btn" data-scale="natural_minor">Nat. minor</button>
+          </div>
+        </div>
+      </div>
+      <div class="pos-fullneck__legend">
+        <span class="pos-fn-legend-item" data-shape="E">E shape</span>
+        <span class="pos-fn-legend-item" data-shape="A">A shape</span>
+        <span class="pos-fn-legend-item" data-shape="G">G shape</span>
+        <span class="pos-fn-legend-item" data-shape="C">C shape</span>
+        <span class="pos-fn-legend-item" data-shape="D">D shape</span>
+        <span class="pos-fullneck__hint">Colored bands = CAGED shape regions &nbsp;·&nbsp; ● = root &nbsp;·&nbsp; ● = scale tone &nbsp;·&nbsp; dashed line = G→B register break &nbsp;·&nbsp; click shape to toggle</span>
+      </div>
+      <div id="pos-fullneck-fb" class="pos-fullneck__fb"></div>
+      <p class="pos-fullneck__note">
+        Five boxes tile the neck end-to-end; overlap at shape boundaries is intentional.
+        The dashed line marks the G→B tuning gap: the lower register (G string and below, <strong>brighter bands</strong>)
+        uses consistent perfect-4th spacing, while the upper register (B and high-e, <strong>fainter bands</strong>) shifts 1 fret higher.
+        E-shape and A-shape share the same lower-register note geometry — their patterns diverge only in the upper register.
+      </p>
+    </div>
+
+    <!-- ── B-string rule ──────────────────────────────────────────────── -->
+    <div class="pos-bstring-rule">
+      <div class="pos-bstr-body">
+        <div class="pos-bstr-text">
+          <h2 class="pos-intro__h2">The B-String Rule</h2>
+          <p>
+            Every adjacent pair of strings in standard tuning is a <strong>perfect 4th (5 semitones)</strong>
+            apart: E→A, A→D, D→G, B→e. Every pair — except one.
+            The G string to B string gap is only a <strong>major 3rd (4 semitones)</strong>. One semitone short.
+          </p>
+          <p>
+            This means any scale shape that crosses from the G string to the B string must shift
+            <strong>1 fret higher</strong> on the B and high-e strings. Ignore the shift and the
+            notes are wrong.
+          </p>
+          <p>
+            The five CAGED shapes split into two groups based on this gap. The <strong>E and A shapes</strong>
+            anchor their root on the bass strings (6th and 5th) — the B-string crossing is far from the root.
+            The <strong>G, C, and D shapes</strong> have their root on the G, D, or B string itself —
+            the scale immediately runs into or starts at the anomalous gap.
+          </p>
+          <p>
+            G-shape root is on the G string: the very next string up is B — the gap is the first thing
+            you cross. D-shape root is on the D string: two strings away from B, with G in between.
+            C-shape root lands directly on the B string.
+          </p>
+        </div>
+
+        <div class="pos-bstr-diagram-wrap">
+          <p class="pos-bstr-diagram__caption">C major pent — G and B strings</p>
+          <!-- Static diagram: G string frets 0,2,5 vs B string frets 1,3,5 -->
+          <div class="pos-bstr-neck">
+            <div class="pos-bstr-row">
+              <span class="pos-bstr-string-label">G</span>
+              <span class="pos-bstr-cell pos-bstr-cell--note" title="G3">G</span>
+              <span class="pos-bstr-cell"></span>
+              <span class="pos-bstr-cell pos-bstr-cell--note" title="A3">A</span>
+              <span class="pos-bstr-cell"></span>
+              <span class="pos-bstr-cell"></span>
+              <span class="pos-bstr-cell pos-bstr-cell--root" title="C4">C</span>
+            </div>
+            <div class="pos-bstr-gap-label">↑ G→B: only 4 semitones ↓</div>
+            <div class="pos-bstr-row">
+              <span class="pos-bstr-string-label">B</span>
+              <span class="pos-bstr-cell"></span>
+              <span class="pos-bstr-cell pos-bstr-cell--root pos-bstr-cell--shifted" title="C4 — shifted up 1 fret">C</span>
+              <span class="pos-bstr-cell"></span>
+              <span class="pos-bstr-cell pos-bstr-cell--note" title="D4">D</span>
+              <span class="pos-bstr-cell"></span>
+              <span class="pos-bstr-cell pos-bstr-cell--note" title="E4">E</span>
+            </div>
+            <div class="pos-bstr-fretnums">
+              <span></span>
+              <span>0</span><span>1</span><span>2</span>
+              <span>3</span><span>4</span><span>5</span>
+            </div>
+          </div>
+          <p class="pos-bstr-diagram__note">
+            The C root appears at G-fret-5 and B-fret-1 — shifted 1 fret higher on B.
+            <span class="pos-bstr-diagram__shifted">Highlighted cell = shifted root</span>
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ── Vocabulary ────────────────────────────────────────────────────── -->
+  <section class="pos-vocab">
+    <h2 class="pos-vocab__title">Vocabulary</h2>
+    <dl class="pos-vocab__list">
+      <dt>Pentatonic scale</dt>
+      <dd>A 5-note scale. <em>Major pentatonic</em> removes the 4th and 7th from a major scale; <em>minor pentatonic</em> removes the 2nd and 6th from natural minor.</dd>
+
+      <dt>CAGED system</dt>
+      <dd>Five movable scale/chord shapes — <strong>C, A, G, E, D</strong> — that tile the fretboard end-to-end. Any note on the neck belongs to one of the five shapes.</dd>
+
+      <dt>Box position</dt>
+      <dd>A compact 3–5 fret window containing two scale notes per string. Five boxes give complete neck coverage.</dd>
+
+      <dt>Root note</dt>
+      <dd>The tonal centre of the scale. Root dots are the anchor you orient each box around — the note the scale wants to resolve to.</dd>
+
+      <dt>Relative minor</dt>
+      <dd>A minor scale sharing every note with a major scale. A minor is relative to C major — same boxes, different root emphasis and emotional colour.</dd>
+
+      <dt>Parallel minor</dt>
+      <dd>A minor scale with the same root but different notes. C minor is parallel to C major — different shapes, same tonic.</dd>
+
+      <dt>Open position</dt>
+      <dd>A box that includes fret 0 (open strings). Shapes at the nut end of the neck sit in open position.</dd>
+
+      <dt>B-string shift</dt>
+      <dd>The 1-fret upward adjustment on the B and high-E strings, caused by the G→B interval being a major 3rd rather than a perfect 4th.</dd>
+    </dl>
+  </section>
+
+  <!-- ── Drill grid ─────────────────────────────────────────────────────── -->
+  {% for group in key_groups %}
+  <section class="pos-group">
+    <div class="pos-group__header">
+      <h2 class="pos-group__title">{{ group.label }}</h2>
+      <span class="pos-group__sub">
+        {{ group.major }}/{{ group.relative_minor }}m — pentatonic and diatonic, all five CAGED shapes
+      </span>
+    </div>
+
+    <div class="pos-group__grid">
+      <!-- Row 0: group labels -->
+      <div class="pos-grid__label"></div>
+      <div class="pos-grid__group-head" style="grid-column: 2 / 4">E &amp; A string roots</div>
+      <div class="pos-grid__group-head pos-grid__group-head--bstr" style="grid-column: 4 / 7">passes the B string</div>
+
+      <!-- Row 1: shape column headers -->
+      <div class="pos-grid__label"></div>
+      {% for shape in shape_order %}
+      <div class="pos-grid__col-head{% if shape in b_string_shapes %} pos-grid__col-head--bstr{% endif %}">
+        {{ shape }} shape
+      </div>
+      {% endfor %}
+
+      <!-- Pentatonic section -->
+      <div class="pos-grid__label"></div>
+      <div class="pos-grid__scale-head" style="grid-column: 2 / -1">Pentatonic (5 notes)</div>
+
+      <div class="pos-grid__row-head">{{ group.major }} major pent</div>
+      {% for shape in shape_order %}
+        {% set pos = all_positions.get((group.id, 'pentatonic_major', shape)) %}
+        {% if pos %}
+        <a href="/positions/{{ group.id }}/pentatonic_major/{{ shape }}"
+           class="pos-cell{% if shape in b_string_shapes %} pos-cell--bstr{% endif %}">
+          <span class="pos-cell__shape">{{ shape }}</span>
+          <span class="pos-cell__frets">{{ pos.fret_min }}–{{ pos.fret_max }}</span>
+          <span class="pos-cell__root">root {{ pos.root_sci }}</span>
+          <span class="pos-cell__tiers">
+            <span class="pos-tier pos-tier--guided"
+                  data-key="mpos:{{ group.id }}:pentatonic_major:{{ shape }}:guided"
+                  title="Guided">◉</span>
+            <span class="pos-tier pos-tier--blind"
+                  data-key="mpos:{{ group.id }}:pentatonic_major:{{ shape }}:blind"
+                  title="Blind">○</span>
+            <span class="pos-tier pos-tier--boundary"
+                  data-key="mpos:{{ group.id }}:pentatonic_major:{{ shape }}:boundary"
+                  title="Connected to next shape">→</span>
+          </span>
+        </a>
+        {% else %}
+        <div class="pos-cell pos-cell--empty"></div>
+        {% endif %}
+      {% endfor %}
+
+      <div class="pos-grid__row-head">{{ group.relative_minor }} minor pent</div>
+      {% for shape in shape_order %}
+        {% set pos = all_positions.get((group.id, 'pentatonic_minor', shape)) %}
+        {% if pos %}
+        <a href="/positions/{{ group.id }}/pentatonic_minor/{{ shape }}"
+           class="pos-cell pos-cell--minor{% if shape in b_string_shapes %} pos-cell--bstr{% endif %}">
+          <span class="pos-cell__shape">{{ shape }}</span>
+          <span class="pos-cell__frets">{{ pos.fret_min }}–{{ pos.fret_max }}</span>
+          <span class="pos-cell__root">root {{ pos.root_sci }}</span>
+          <span class="pos-cell__tiers">
+            <span class="pos-tier pos-tier--guided"
+                  data-key="mpos:{{ group.id }}:pentatonic_minor:{{ shape }}:guided"
+                  title="Guided">◉</span>
+            <span class="pos-tier pos-tier--blind"
+                  data-key="mpos:{{ group.id }}:pentatonic_minor:{{ shape }}:blind"
+                  title="Blind">○</span>
+            <span class="pos-tier pos-tier--boundary"
+                  data-key="mpos:{{ group.id }}:pentatonic_minor:{{ shape }}:boundary"
+                  title="Connected to next shape">→</span>
+          </span>
+        </a>
+        {% else %}
+        <div class="pos-cell pos-cell--empty"></div>
+        {% endif %}
+      {% endfor %}
+
+      <!-- Diatonic section -->
+      <div class="pos-grid__label"></div>
+      <div class="pos-grid__scale-head pos-grid__scale-head--diatonic" style="grid-column: 2 / -1">Diatonic (7 notes)</div>
+
+      <div class="pos-grid__row-head">{{ group.major }} major</div>
+      {% for shape in shape_order %}
+        {% set pos = all_positions.get((group.id, 'major', shape)) %}
+        {% if pos %}
+        <a href="/positions/{{ group.id }}/major/{{ shape }}"
+           class="pos-cell pos-cell--diatonic{% if shape in b_string_shapes %} pos-cell--bstr{% endif %}">
+          <span class="pos-cell__shape">{{ shape }}</span>
+          <span class="pos-cell__frets">{{ pos.fret_min }}–{{ pos.fret_max }}</span>
+          <span class="pos-cell__root">root {{ pos.root_sci }}</span>
+          <span class="pos-cell__tiers">
+            <span class="pos-tier pos-tier--guided"
+                  data-key="mpos:{{ group.id }}:major:{{ shape }}:guided"
+                  title="Guided">◉</span>
+            <span class="pos-tier pos-tier--blind"
+                  data-key="mpos:{{ group.id }}:major:{{ shape }}:blind"
+                  title="Blind">○</span>
+            <span class="pos-tier pos-tier--boundary"
+                  data-key="mpos:{{ group.id }}:major:{{ shape }}:boundary"
+                  title="Connected to next shape">→</span>
+          </span>
+        </a>
+        {% else %}
+        <div class="pos-cell pos-cell--empty"></div>
+        {% endif %}
+      {% endfor %}
+
+      <div class="pos-grid__row-head">{{ group.relative_minor }} nat. minor</div>
+      {% for shape in shape_order %}
+        {% set pos = all_positions.get((group.id, 'natural_minor', shape)) %}
+        {% if pos %}
+        <a href="/positions/{{ group.id }}/natural_minor/{{ shape }}"
+           class="pos-cell pos-cell--minor pos-cell--diatonic{% if shape in b_string_shapes %} pos-cell--bstr{% endif %}">
+          <span class="pos-cell__shape">{{ shape }}</span>
+          <span class="pos-cell__frets">{{ pos.fret_min }}–{{ pos.fret_max }}</span>
+          <span class="pos-cell__root">root {{ pos.root_sci }}</span>
+          <span class="pos-cell__tiers">
+            <span class="pos-tier pos-tier--guided"
+                  data-key="mpos:{{ group.id }}:natural_minor:{{ shape }}:guided"
+                  title="Guided">◉</span>
+            <span class="pos-tier pos-tier--blind"
+                  data-key="mpos:{{ group.id }}:natural_minor:{{ shape }}:blind"
+                  title="Blind">○</span>
+            <span class="pos-tier pos-tier--boundary"
+                  data-key="mpos:{{ group.id }}:natural_minor:{{ shape }}:boundary"
+                  title="Connected to next shape">→</span>
+          </span>
+        </a>
+        {% else %}
+        <div class="pos-cell pos-cell--empty"></div>
+        {% endif %}
+      {% endfor %}
+
+      <!-- Full neck run -->
+      <div class="pos-grid__label"></div>
+      <div class="pos-grid__scale-head pos-grid__scale-head--fullneck" style="grid-column: 2 / -1">Full Neck Run — all 5 shapes connected</div>
+
+      <div class="pos-grid__row-head">all shapes</div>
+      <div class="pos-fn-run-row">
+        {% for scale_type, scale_label in [('pentatonic_major', 'Major pent'), ('pentatonic_minor', 'Minor pent'), ('major', 'Major scale'), ('natural_minor', 'Nat. minor')] %}
+        <a href="/positions/{{ group.id }}/{{ scale_type }}/full_neck" class="pos-cell-fn">
+          <span class="pos-cell-fn__label">{{ scale_label }}</span>
+          <span class="pos-cell__tiers">
+            <span class="pos-tier pos-tier--guided"
+                  data-key="mpos:{{ group.id }}:{{ scale_type }}:full_neck:guided"
+                  title="Guided">◉</span>
+            <span class="pos-tier pos-tier--blind"
+                  data-key="mpos:{{ group.id }}:{{ scale_type }}:full_neck:complete"
+                  title="Complete">○</span>
+          </span>
+        </a>
+        {% endfor %}
+      </div>
+
+      <!-- Relationship note -->
+      <div class="pos-grid__label"></div>
+      <div class="pos-group__rel-note" style="grid-column: 2 / -1">
+        All four scales share the same five box positions — same fingering geometry.
+        Pentatonic omits the 4th &amp; 7th (major) or 2nd &amp; 6th (minor).
+        The relative minor shifts the tonal centre without changing any notes.
+      </div>
+    </div>
+  </section>
+  {% endfor %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/components/keyboard.js?v=10"></script>
+<script src="/static/js/components/fretboard.js?v=14"></script>
+<script>
+(function () {
+  "use strict";
+
+  var CAGED_DATA      = {{ caged_data | safe }};
+  var B_STRING_SHAPES = new Set({{ b_string_shapes | tojson }});
+  var SHAPE_ORDER     = ["E", "A", "G", "C", "D"];
+  var SHAPE_COLORS    = { E: "#d4524a", A: "#d4962a", G: "#2aac58", C: "#5579ff", D: "#9855d4" };
+
+  var currentKey     = "C";
+  var currentScale   = "pentatonic_major";
+  var fbInstances    = [];
+  var fnCurrentRoot  = 0;            // pitch class 0–11
+  var fnCurrentScale = "pentatonic_major";
+  var fnFbInstance   = null;
+  var fnHiddenShapes = new Set();
+
+  // ── Orphan computation ───────────────────────────────────────────────────
+  // Returns the Set of MIDI notes in `notes` that fall outside every
+  // consecutive root-to-root span — notes that don't complete a full octave.
+  function computeOrphans(notes, roots) {
+    var sortedRoots = roots.slice().sort(function (a, b) { return a - b; });
+    var noteSet     = new Set(notes);
+    if (sortedRoots.length < 2) {
+      var rootSet = new Set(sortedRoots);
+      return new Set(notes.filter(function (m) { return !rootSet.has(m); }));
+    }
+    var complete = new Set(sortedRoots);
+    for (var i = 0; i < sortedRoots.length - 1; i++) {
+      var lo = sortedRoots[i], hi = sortedRoots[i + 1];
+      noteSet.forEach(function (m) { if (m > lo && m < hi) complete.add(m); });
+    }
+    return new Set(notes.filter(function (m) { return !complete.has(m); }));
+  }
+
+  // ── Destroy mini fretboard instances ────────────────────────────────────
+  function destroyAll() {
+    fbInstances.forEach(function (fb) { fb.destroy(); });
+    fbInstances = [];
+  }
+
+  // ── Shape explorer (5 mini fretboards) ──────────────────────────────────
+  function renderCards() {
+    destroyAll();
+    var container = document.getElementById("pos-shape-cards");
+    if (!container || !window.MtheoryFretboard) return;
+    container.innerHTML = "";
+    var data = CAGED_DATA[currentKey][currentScale];
+
+    SHAPE_ORDER.forEach(function (shape) {
+      var sd     = data[shape];
+      var isBStr = B_STRING_SHAPES.has(shape);
+
+      var card = document.createElement("div");
+      card.className = "pos-shape-card" + (isBStr ? " pos-shape-card--bstr" : "");
+
+      var hdr = document.createElement("div");
+      hdr.className = "pos-shape-card__hdr";
+
+      var nm = document.createElement("span");
+      nm.className = "pos-shape-card__name";
+      nm.textContent = shape + " shape";
+      hdr.appendChild(nm);
+
+      var fr = document.createElement("span");
+      fr.className = "pos-shape-card__frets";
+      fr.textContent = sd.fret_min + "–" + sd.fret_max;
+      hdr.appendChild(fr);
+
+      if (isBStr) {
+        var badge = document.createElement("span");
+        badge.className = "pos-shape-card__bstr-badge";
+        badge.textContent = "crosses B";
+        badge.title = "Root on G, D, or B string — crosses the G→B tuning gap";
+        hdr.appendChild(badge);
+      }
+      card.appendChild(hdr);
+
+      var fbEl = document.createElement("div");
+      fbEl.className = "pos-shape-card__fb";
+      card.appendChild(fbEl);
+
+      var link = document.createElement("a");
+      link.href = "/positions/" + currentKey + "/" + currentScale + "/" + shape;
+      link.className = "pos-shape-card__drill";
+      link.textContent = "Drill →";
+      card.appendChild(link);
+
+      container.appendChild(card);
+
+      var fb = new window.MtheoryFretboard(fbEl, {
+        frets:         sd.fret_max,
+        fretMin:       sd.fret_min,
+        stringSpacing: 22,
+        audio:         false,
+        emitDom:       false,
+        registerView:  true,
+      });
+      var rootSet   = new Set(sd.roots);
+      var orphanSet = computeOrphans(sd.notes, sd.roots);
+      var refSet    = new Set(sd.notes.filter(function (m) { return !rootSet.has(m) && !orphanSet.has(m); }));
+      fb.setView(rootSet, refSet, orphanSet);
+      fbInstances.push(fb);
+    });
+  }
+
+  // ── Full-neck: geometric CAGED computation for any key ───────────────────
+  // Open-string pitch classes: E A D G B E
+  var FN_OPEN_PC   = [4, 9, 2, 7, 11, 4];
+  var FN_OPEN_MIDI = [40, 45, 50, 55, 59, 64];
+
+  // Scale pitch-class intervals (no octave wrap — set membership only)
+  var FN_SCALE_PCS = {
+    pentatonic_major: [0, 2, 4, 7, 9],
+    pentatonic_minor: [0, 3, 5, 7, 10],
+    major:            [0, 2, 4, 5, 7, 9, 11],
+    natural_minor:    [0, 2, 3, 5, 7, 8, 10],
+  };
+
+  // CAGED shape geometry:
+  //   rootString = which string (0=E 1=A 2=D 3=G 4=B) has the characteristic root
+  //   startOff/endOff = box window relative to that anchor fret
+  var FN_SHAPE_DEFS = [
+    { shape: 'E', color: '#d4524a', rootStr: 0, s: -1, e: 2 },
+    { shape: 'A', color: '#d4962a', rootStr: 1, s: -1, e: 2 },
+    { shape: 'G', color: '#2aac58', rootStr: 3, s:  0, e: 3 },
+    { shape: 'C', color: '#5579ff', rootStr: 4, s: -1, e: 2 },
+    { shape: 'D', color: '#9855d4', rootStr: 2, s: -1, e: 3 },
+  ];
+
+  function computeFullNeckGroups(rootPc, scaleType) {
+    var ivs     = FN_SCALE_PCS[scaleType] || FN_SCALE_PCS.pentatonic_major;
+    var scalePcs = new Set(ivs.map(function(i) { return (rootPc + i) % 12; }));
+
+    return FN_SHAPE_DEFS.map(function(def) {
+      // Anchor fret = how many semitones above open string the root is
+      var anchor = ((rootPc - FN_OPEN_PC[def.rootStr]) % 12 + 12) % 12;
+      var fmin   = Math.max(0, anchor + def.s);
+      var fmax   = anchor + def.e;
+
+      var notes = new Set();
+      var roots = new Set();
+      for (var s = 0; s < 6; s++) {
+        for (var f = fmin; f <= fmax; f++) {
+          var m  = FN_OPEN_MIDI[s] + f;
+          var pc = ((m % 12) + 12) % 12;
+          if (scalePcs.has(pc)) {
+            notes.add(m);
+            if (pc === rootPc) roots.add(m);
+          }
+        }
+      }
+      return { shape: def.shape, fmin: fmin, fmax: fmax, midi: notes, rootMidi: roots, color: def.color };
+    });
+  }
+
+  function renderFullNeck() {
+    if (!window.MtheoryFretboard) return;
+    var container = document.getElementById("pos-fullneck-fb");
+    if (!container) return;
+
+    var computed = computeFullNeckGroups(fnCurrentRoot, fnCurrentScale);
+
+    // Filter hidden shapes, then sort by fmin so we can partition the neck.
+    var visible = computed
+      .filter(function(g) { return !fnHiddenShapes.has(g.shape); })
+      .sort(function(a, b) { return a.fmin - b.fmin; });
+
+    // Non-overlapping region bands: each shape owns [its fmin .. next shape's fmin - 1].
+    // The final shape owns down to its own fmax.
+    var regions = visible.map(function(g, i) {
+      var rFmax = (i < visible.length - 1) ? visible[i + 1].fmin - 1 : g.fmax;
+      return { fmin: g.fmin, fmax: rFmax, color: g.color };
+    });
+
+    // Aggregate scale tones, roots, and orphans across all visible shapes.
+    var allRoots   = new Set();
+    var allRefs    = new Set();
+    var allOrphans = new Set();
+    visible.forEach(function(g) {
+      var shapeNotes   = [...g.midi];
+      var shapeRoots   = [...g.rootMidi];
+      var shapeOrphans = computeOrphans(shapeNotes, shapeRoots);
+      g.rootMidi.forEach(function(m) { allRoots.add(m); });
+      shapeNotes.forEach(function(m) {
+        if (!g.rootMidi.has(m)) {
+          if (shapeOrphans.has(m)) allOrphans.add(m);
+          else allRefs.add(m);
+        }
+      });
+    });
+
+    if (!fnFbInstance) {
+      fnFbInstance = new window.MtheoryFretboard(container, {
+        frets:         14,
+        fretMin:       0,
+        stringSpacing: 26,
+        audio:         false,
+        emitDom:       false,
+        registerView:  true,
+      });
+    }
+    fnFbInstance.setRegionsAndView(regions, allRoots, allRefs, allOrphans);
+  }
+
+  function updateDisplay() {
+    renderCards();
+    renderFullNeck();
+  }
+
+  // ── Explorer controls (C/G/F key groups + scale type) ────────────────────
+  document.querySelectorAll(".pos-key-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".pos-key-btn").forEach(function (b) { b.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      currentKey = btn.dataset.key;
+      renderCards();
+    });
+  });
+
+  document.querySelectorAll(".pos-scale-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".pos-scale-btn").forEach(function (b) { b.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      currentScale = btn.dataset.scale;
+      renderCards();
+    });
+  });
+
+  // ── Full-neck controls (all 12 keys, own scale selector) ─────────────────
+  document.querySelectorAll(".pos-fn-key-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".pos-fn-key-btn").forEach(function (b) { b.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      fnCurrentRoot = parseInt(btn.dataset.root, 10);
+      renderFullNeck();
+    });
+  });
+
+  document.querySelectorAll(".pos-fn-scale-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".pos-fn-scale-btn").forEach(function (b) { b.classList.remove("is-active"); });
+      btn.classList.add("is-active");
+      fnCurrentScale = btn.dataset.scale;
+      renderFullNeck();
+    });
+  });
+
+  document.querySelectorAll(".pos-fn-legend-item").forEach(function (item) {
+    item.addEventListener("click", function () {
+      var shape = item.dataset.shape;
+      if (fnHiddenShapes.has(shape)) {
+        fnHiddenShapes.delete(shape);
+        item.classList.remove("is-hidden");
+      } else {
+        fnHiddenShapes.add(shape);
+        item.classList.add("is-hidden");
+      }
+      renderFullNeck();
+    });
+  });
+
+  // ── Progress tracking: read localStorage and light up completed tier markers ──
+  function loadProgress() {
+    document.querySelectorAll('[data-key]').forEach(function(el) {
+      try {
+        if (localStorage.getItem(el.dataset.key)) {
+          el.classList.add('is-done');
+        }
+      } catch (e) {}
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      updateDisplay();
+      loadProgress();
+    });
+  } else {
+    updateDisplay();
+    loadProgress();
+  }
+})();
+</script>
+{% endblock %}

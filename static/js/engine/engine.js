@@ -1,13 +1,46 @@
-/* engine.js — Mtheory Content Engine runtime (Phase 3 skeleton)
+/* engine.js — Mtheory Content Engine runtime
  *
- * Walks a compiled lesson block-tree (from app/lesson_dsl.py), mounts widgets,
- * holds flags, listens for component events, and reveals `when` blocks when their
- * flag/expr becomes true. This is the State Machine + Renderer from
- * CONTENT_ENGINE.md §1b/1c, kept minimal for the first working loop.
+ * ── What it does ─────────────────────────────────────────────────────────────
+ * Walks a compiled lesson block-tree (JSON produced by app/lesson_dsl.py or
+ * Python lesson builders like app/positions.py), mounts UI components, tracks
+ * flags, listens for component events, and reveals conditional sections when
+ * their flag/expression becomes true.
  *
- * Widget registry: maps a widget name -> mount(el, props, engine). Simple
- * widgets use autoRegister(name, globalKey); compound widgets with custom sync
- * logic use MtheoryEngine.register(name, fn) directly (both at bottom).
+ * ── Block types it handles ───────────────────────────────────────────────────
+ * markdown    — rendered prose (via marked.js)
+ * widget      — mounts a UI component from REGISTRY; see Component Contract below
+ * checkpoint  — counts mtheory:quiz_answered events; fires on_pass when needs==of
+ * listen      — listens for a DOM event; evaluates a `where` expression; fires `then`
+ * when        — shows/hides a section based on a flag or expression
+ * button      — clickable action button
+ * callout     — styled info box (kind: "info" | "key" | "warn")
+ * recall      — quiz block (mode-specific)
+ *
+ * ── on_pass / action fields ──────────────────────────────────────────────────
+ * set_flag: "name"          → set a flag, re-evaluate all when-blocks
+ * persist: {key, value}     → localStorage.setItem(key, value || "1")
+ * complete: true            → fire "mte:complete" on the lesson root element
+ *
+ * ── Component Contract ───────────────────────────────────────────────────────
+ * Every component registered via autoRegister() must have:
+ *
+ *   static mount(hostEl, props, engine) → instance
+ *     Called once when the block is rendered. Build your DOM inside hostEl.
+ *     Return a component instance.
+ *
+ *   instance.triggerNote(midi)
+ *     Called by the Engine to route MIDI/audio input to the most-visible widget.
+ *     The IntersectionObserver picks the widget nearest the viewport center.
+ *
+ *   instance.destroy()
+ *     Called when the engine is torn down. Remove listeners, release resources.
+ *
+ * Components emit progress via CustomEvent("mtheory:quiz_answered", {bubbles:true})
+ * with detail.payload.isCorrect = true. This is what checkpoints count.
+ *
+ * ── Widget registry: maps widget name → {mount} ──────────────────────────────
+ * Components call autoRegister("name", ClassRef) at the end of their file.
+ * engine.html must <script src> the component file before engine.js runs.
  */
 (function (global) {
   "use strict";
@@ -90,6 +123,35 @@
     return ctx.scientificPitch === sci || ctx.noteName === sci;
   }
 
+  // --- SyncGroup: bidirectional MIDI mirror between co-registered widgets ---
+  function _mirrorMidi(inst, midi) {
+    if (typeof inst.lingerNote === "function") {
+      inst.lingerNote(midi);
+    } else if (typeof inst.setHighlightMidi === "function") {
+      inst.setHighlightMidi(new Set([midi]));
+    } else if (typeof inst.setHighlight === "function" && global.MtheoryKeyboard) {
+      inst.setHighlight(global.MtheoryKeyboard.sciOf(midi));
+    }
+  }
+
+  class SyncGroup {
+    constructor() { this._members = []; }
+    add(el, inst) {
+      const handler = (ev) => {
+        const p = ev.detail && ev.detail.payload;
+        if (!p || p.midi == null) return;
+        const midi = p.midi;
+        for (const m of this._members) {
+          if (m.inst === inst) continue;
+          _mirrorMidi(m.inst, midi);
+        }
+      };
+      el.addEventListener("mtheory:note_played", handler);
+      el.addEventListener("mtheory:fret_played", handler);
+      this._members.push({ el, inst });
+    }
+  }
+
   // --- Engine -------------------------------------------------------------
   class Engine {
     constructor(lesson, rootEl) {
@@ -102,6 +164,7 @@
       this.widgets = [];     // mounted widget instances
       this._midiTargets = []; // { el, inst, ratio } — candidates for MIDI focus
       this._midiObserver = null;
+      this._syncGroups = {};
     }
 
     run() {
@@ -145,8 +208,7 @@
         });
         if (!best || bestRatio <= 0) return;
         const inst = best.inst;
-        // Compound widgets (staffcompanion) wrap keyboard as .keyboard property.
-        const target = (inst && inst.keyboard) ? inst.keyboard : inst;
+        const target = inst;
         if (target && typeof target.triggerNote === "function") {
           target.triggerNote(midi);
         }
@@ -175,6 +237,15 @@
       if (then.clear_flag != null) {
         this.flags[then.clear_flag] = false;
         this._refreshWhens();
+      }
+      // Persist key/value to localStorage for cross-session progress tracking.
+      if (then.persist != null) {
+        try {
+          localStorage.setItem(
+            then.persist.key,
+            then.persist.value != null ? String(then.persist.value) : "1"
+          );
+        } catch (e) {}
       }
       if (then.complete) {
         this.root.dispatchEvent(new CustomEvent("mte:complete",
@@ -207,6 +278,11 @@
             if (inst) {
               this.widgets.push(inst);
               this._registerMidiTarget(host, inst);
+              const syncName = block.props && block.props.sync;
+              if (syncName) {
+                if (!this._syncGroups[syncName]) this._syncGroups[syncName] = new SyncGroup();
+                this._syncGroups[syncName].add(host, inst);
+              }
             }
           } else {
             host.textContent = "[unknown widget: " + block.widget + "]";
@@ -649,12 +725,8 @@
   MtheoryEngine.init = MtheoryEngine.run;
 
   // ---------------------------------------------------------------------------
-  // Widget registration helpers
+  // Widget registration
   // ---------------------------------------------------------------------------
-  // autoRegister handles the common case: one global constructor, no custom
-  // setup.  Pass the widget name and the global key (e.g. "MtheoryKeyboard").
-  // Compound widgets with custom wiring (companion, staffcompanion) are
-  // registered explicitly below.
   function autoRegister(name, globalKey) {
     REGISTRY[name] = function (el, props) {
       var Cls = global[globalKey];
@@ -669,7 +741,6 @@
   // scaleview: unified scale-visualisation widget.
   //   view:"staff"    (default) — treble staff with V-bracket intervals (MtheoryScaleView)
   //   view:"keyboard"           — keyboard + SVG overlay + optional fretboard (MtheoryKeyView)
-  //   view:"keyboard" is identical to the legacy "keyview" name, which still works.
   REGISTRY["scaleview"] = function (el, props) {
     props = props || {};
     var isKb = props.view === "keyboard";
@@ -678,152 +749,16 @@
     if (!Cls) { el.textContent = "[" + key + " not loaded]"; return null; }
     return new Cls(el, props);
   };
-  // keyview: backwards-compatible alias for scaleview {view:"keyboard"}.
-  autoRegister("keyview",        "MtheoryKeyView");
   autoRegister("chromacircle",   "MtheoryChromaCircle");
   autoRegister("stepview",       "MtheoryStepView");
-  // grandstaff: alias for staff {clef:"grand"} — MtheoryGrandStaff is exported by staff.js.
-  autoRegister("grandstaff",     "MtheoryGrandStaff");
   autoRegister("minorscaleview", "MtheoryMinorScaleView");
   autoRegister("keysigquiz",     "MtheoryKeysigQuiz");
   autoRegister("mcq",            "MtheoryMCQ");
   autoRegister("keysigview",     "MtheoryKeySigView");
   autoRegister("fifthscircle",   "MtheoryFifthsCircle");
 
-  // Companion widget — keyboard + fretboard, synced by absolute MIDI. Playing a
-  // note on one instrument lights its unisons on the other (and vice versa).
-  MtheoryEngine.register("companion", function (el, props) {
-    props = props || {};
-    if (!global.MtheoryKeyboard || !global.MtheoryFretboard) {
-      el.textContent = "[Companion: instruments not loaded]";
-      return null;
-    }
-    el.classList.add("mte-companion");
-
-    const kbHost = document.createElement("div");
-    kbHost.className = "mte-companion__kb";
-    const fbHost = document.createElement("div");
-    fbHost.className = "mte-companion__fb";
-    el.appendChild(kbHost);
-    el.appendChild(fbHost);
-
-    const lingerMs = props.linger === false ? 0 : (props.linger != null ? props.linger : 3500);
-    const fb = new global.MtheoryFretboard(fbHost, {
-      strings: props.strings,
-      frets: props.frets != null ? props.frets : 5,
-      highlight: props.highlight,
-      reference: props.reference,
-      labels: props.labels === "all" ? "all" : "marks",
-      lingerMs: lingerMs,
-    });
-    // Match the keyboard's range to the fretboard's reachable pitches so the
-    // two instruments cover the same span (e.g. 5 frets => E2..A4).
-    const span = fretSpan(props.strings, props.frets != null ? props.frets : 5);
-    const KBc = global.MtheoryKeyboard;
-    const kb = new KBc(kbHost, {
-      low: KBc.sciOf(span.lo),
-      high: KBc.sciOf(span.hi),
-      highlight: props.highlight,
-      labels: props.labels || "naturals",
-    });
-
-    if (props.sync !== false) {
-      // Mirror each play onto the other instrument by absolute MIDI (§1d).
-      el.addEventListener("mtheory:note_played", (ev) => {
-        const m = ev.detail && ev.detail.payload && ev.detail.payload.midi;
-        if (m == null) return;
-        if (lingerMs > 0) fb.lingerNote(m); else fb.setHighlightMidi(new Set([m]));
-      });
-      el.addEventListener("mtheory:fret_played", (ev) => {
-        const m = ev.detail && ev.detail.payload && ev.detail.payload.midi;
-        if (m != null) kb.setHighlight(global.MtheoryKeyboard.sciOf(m));
-      });
-    }
-    return { keyboard: kb, fretboard: fb,
-      destroy() { kb.destroy(); fb.destroy(); } };
-  });
-
-  // Staff companion — keyboard + treble staff, synced by absolute MIDI. Playing
-  // a key lights its notehead on the staff (and vice versa). The pair shares one
-  // pitch range so the two readings of the same note line up. With `guitar:true`
-  // (or a frets/strings prop) it adds a third synced view: the fretboard.
-  MtheoryEngine.register("staffcompanion", function (el, props) {
-    props = props || {};
-    const KBc = global.MtheoryKeyboard;
-    if (!KBc || !global.MtheoryStaff) {
-      el.textContent = "[Staff companion: instruments not loaded]";
-      return null;
-    }
-    el.classList.add("mte-companion", "mte-companion--staff");
-
-    const stHost = document.createElement("div");
-    stHost.className = "mte-companion__staff";
-    const kbHost = document.createElement("div");
-    kbHost.className = "mte-companion__kb";
-    el.appendChild(stHost);
-    el.appendChild(kbHost);
-
-    const low = props.low || "C4";
-    const high = props.high || "G5";
-    const st = new global.MtheoryStaff(stHost, {
-      low: low, high: high,
-      highlight: props.highlight,
-      clef: props.clef,
-      labels: props.labels === "all" ? "names" : (props.labels || "names"),
-    });
-    const kb = new KBc(kbHost, {
-      low: low, high: high,
-      highlight: props.highlight,
-      labels: props.kbLabels || "naturals",
-    });
-
-    // Optional third view: the guitar neck, synced by absolute MIDI.
-    let fb = null;
-    const scLingerMs = props.linger === false ? 0 : (props.linger != null ? props.linger : 3500);
-    const wantGuitar = props.guitar === true || props.frets != null || props.strings != null;
-    if (wantGuitar && global.MtheoryFretboard) {
-      const fbHost = document.createElement("div");
-      fbHost.className = "mte-companion__fb";
-      el.appendChild(fbHost);
-      fb = new global.MtheoryFretboard(fbHost, {
-        strings: props.strings,
-        frets: props.frets != null ? props.frets : 8,
-        highlight: props.highlight,
-        reference: props.reference,
-        labels: props.fbLabels === "all" ? "all" : "marks",
-        lingerMs: scLingerMs,
-      });
-    }
-
-    if (props.sync !== false) {
-      el.addEventListener("mtheory:note_played", (ev) => {
-        const p = ev.detail && ev.detail.payload;
-        if (!p || p.midi == null) return;
-        const m = p.midi, src = ev.detail.source;
-        // Mirror onto whichever instruments did not originate the event.
-        if (src !== "staff") st.setHighlightMidi(new Set([m]));
-        if (src !== "keyboard") kb.setHighlight(KBc.sciOf(m));
-        if (fb && src !== "fretboard") {
-          if (scLingerMs > 0) fb.lingerNote(m); else fb.setHighlightMidi(new Set([m]));
-        }
-      });
-      el.addEventListener("mtheory:fret_played", (ev) => {
-        const p = ev.detail && ev.detail.payload;
-        if (!p || p.midi == null) return;
-        const m = p.midi;
-        st.setHighlightMidi(new Set([m]));
-        kb.setHighlight(KBc.sciOf(m));
-        // Fretboard handles its own linger via _press(); only sync non-linger mode.
-        if (fb && scLingerMs === 0) fb.setHighlightMidi(new Set([m]));
-      });
-    }
-    return { keyboard: kb, staff: st, fretboard: fb,
-      destroy() { kb.destroy(); st.destroy(); if (fb) fb.destroy(); } };
-  });
-
   autoRegister("degquiz",        "MtheoryDegQuiz");
-
-  // Compound widgets with custom sync wiring are registered explicitly below.
+  autoRegister("scaledrill",     "MtheoryScaleDrill");
 
   global.MtheoryEngine = MtheoryEngine;
 })(window);

@@ -1,10 +1,15 @@
-"""lesson_dsl.py — Block-DSL compiler for the Content Engine.
+"""lesson_dsl.py — Markdown DSL → JSON block-tree compiler.
 
-Turns a Markdown-with-`:::`-directives lesson file into a JSON block-tree the
-browser runtime (static/js/engine/) walks. Pure-Python, no third-party deps, so
-it can run at server start or on file save without touching the no-build stack.
+─── What it does ────────────────────────────────────────────────────────────
+Reads a Markdown file with YAML frontmatter and `:::directive` blocks,
+and compiles it to the JSON lesson format that engine.js understands.
 
-File shape (see CONTENT_ENGINE.md §2):
+Route: GET /learn/x/{lesson_id}
+  → main.py calls compile_lesson(file_text)
+  → returns {id, title, requires, grants, blocks: [...]}
+  → injected into engine.html as `lesson_json | safe`
+
+─── Lesson file format ──────────────────────────────────────────────────────
 
     ---
     id: "1.1"
@@ -13,7 +18,7 @@ File shape (see CONTENT_ENGINE.md §2):
     grants: [completed_pitch_basics]
     ---
 
-    # Prose markdown
+    # This is Markdown prose — renders as a markdown block.
 
     :::widget keyboard {octaves: 3, highlight: "C4", labels: "naturals"}
     :::
@@ -22,11 +27,35 @@ File shape (see CONTENT_ENGINE.md §2):
     :::
 
     :::when {flag: c_pressed}
-    Revealed once the flag flips.
+    This text is revealed once c_pressed is set.
+
+    :::callout info
+    Pro tip: you can nest blocks inside container directives.
     :::
 
-Container directives (`when`, `callout`) nest child blocks; leaf directives
-(`widget`, `listen`, `button`, `recall`, `checkpoint`) carry props only.
+    :::
+
+─── Directive types ─────────────────────────────────────────────────────────
+Leaf directives (no children):
+  :::widget <type> {props}       Mount a UI component (scaledrill, keyboard, etc.)
+  :::listen {waitFor, where, then, blocking?, once?}  Event gate
+  :::button {label, action}      Clickable action
+  :::checkpoint {needs, of, on_pass}  Progress gate
+  :::recall {mode, ...}          Quiz block
+
+Container directives (have nested children, closed with bare :::):
+  :::when {flag: x}  or  :::when {expr: "note == C4"}   Conditional section
+  :::callout <kind>  (info | key | warn)                 Styled info box
+
+─── on_pass / action fields ─────────────────────────────────────────────────
+  set_flag: "name"          Set a flag; re-evaluates all when-blocks
+  persist: {key, value?}    localStorage.setItem(key, value || "1")
+  complete: true            Mark lesson done
+
+─── Compilation pipeline ────────────────────────────────────────────────────
+parse_frontmatter(text) → (metadata_dict, body_string)
+parse_blocks(body)      → [block_dict, ...]   (stack-based, handles nesting)
+compile_lesson(text)    → full lesson_dict
 """
 
 from __future__ import annotations
@@ -340,6 +369,64 @@ def parse_blocks(body: str, ids: _Counter | None = None) -> list[dict]:
 # --------------------------------------------------------------------------- #
 # Public API                                                                  #
 # --------------------------------------------------------------------------- #
+def scan_chapters(lessons_dir: str = "lessons") -> list[dict]:
+    """Scan the lessons/ directory and return a sorted chapter/lesson index.
+
+    Returns a list of chapter dicts:
+      [{num, title, lessons: [{id, title, estimated_min, file_path}, ...]}, ...]
+
+    Chapters are sorted by their numeric prefix; lessons within each chapter are
+    sorted numerically by their frontmatter id (so 1.10 comes after 1.9).
+    Directories whose names start with '_' (e.g. _smoke) are skipped.
+    """
+    from pathlib import Path
+
+    base = Path(lessons_dir)
+    if not base.exists():
+        return []
+
+    chapter_map: dict[str, list[dict]] = {}
+
+    for md_file in base.rglob("*.md"):
+        if any(part.startswith("_") for part in md_file.parts):
+            continue
+        try:
+            meta, _ = parse_frontmatter(md_file.read_text(encoding="utf-8"))
+            lid     = meta.get("id")
+            title   = meta.get("title", "")
+            chapter = meta.get("chapter", "")
+            if not lid or not chapter:
+                continue
+            chapter_map.setdefault(chapter, []).append({
+                "id":            lid,
+                "title":         title,
+                "chapter":       chapter,
+                "estimated_min": meta.get("estimated_min"),
+                "file_path":     str(md_file),
+            })
+        except Exception:
+            continue
+
+    def _id_sort_key(lesson: dict) -> tuple:
+        try:
+            return tuple(int(p) for p in lesson["id"].split("."))
+        except ValueError:
+            return (999,)
+
+    chapters = []
+    for chapter_title, lessons in chapter_map.items():
+        lessons.sort(key=_id_sort_key)
+        chapter_num = lessons[0]["id"].split(".")[0] if lessons else "0"
+        chapters.append({
+            "num":     chapter_num,
+            "title":   chapter_title,
+            "lessons": lessons,
+        })
+
+    chapters.sort(key=lambda c: int(c["num"]) if c["num"].isdigit() else 999)
+    return chapters
+
+
 def compile_lesson(text: str) -> dict[str, Any]:
     """Compile raw DSL source text into the final JSON lesson tree."""
     meta, body = parse_frontmatter(text)

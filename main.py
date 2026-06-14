@@ -6,6 +6,7 @@ Run with:
 """
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -30,6 +31,9 @@ from app.lesson_engine import next_question, check_answer
 from app.pitch import freq_to_note
 from app.curriculum import STAGES, STAGE_MAP, STAGE_ROWS, MODULES, SEMESTERS, get_stage, stage_note_info
 from app import lesson_dsl
+from app.lesson_dsl import scan_chapters
+from app import positions as pos_module
+from app import glossary as glossary_module
 
 app = FastAPI(title="Chromatic Fretboard Theory Trainer")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -44,14 +48,22 @@ templates.env.filters["tojson"] = lambda obj: Markup(json.dumps(obj))
 # ---------------------------------------------------------------------------
 #
 # Route overview:
-#   /                  — Landing page / note color-shape reference
-#   /fretboard         — Dev/debug tool: render the fretboard with arbitrary notes
-#   /learn             — Curriculum map (stage selection)
-#   /learn/<stage_id>  — Main learning experience; all exercise logic runs
-#                        client-side via theory.js + stage.js.  No server
-#                        round-trips per question.
-#   /trainer           — Freeform quiz; questions generated server-side by
-#                        lesson_engine.py, answers validated via /api/lesson/answer.
+#   /                           — Landing page / note color-shape reference
+#   /learn                      — Curriculum map (stage selection)
+#   /learn/<stage_id>           — Phases system lesson (theory.js + queue.js,
+#                                 no server round-trips per question)
+#   /learn/x/<lesson_id>        — Engine/DSL lesson (compiled Markdown → engine.js)
+#   /positions                  — CAGED shapes overview grid
+#   /positions/<g>/<t>/full_neck — Full-neck scale overview (Engine lesson)
+#   /positions/<g>/<t>/<shape>  — Per-shape scale drill (Engine lesson)
+#   /trainer                    — Freeform quiz; server-side question generation
+#   /inspect                    — Dev: curriculum stage table
+#   /inspect/<stage_id>         — Dev: per-stage detail
+#   /primer/<stage_id>          — Theory primer HTML fragment (injected into overlay)
+#   /jam                        — Jam page (standalone, no curriculum dependency)
+#   /fretboard                  — Dev/debug: render arbitrary note sets on fretboard
+#   /glossary                   — Music theory term dictionary (all terms)
+#   /glossary/<term_id>         — Jump directly to a specific term (anchor redirect)
 #
 # API overview:
 #   /api/pitch             — Frequency → note info (used by /trainer mic flow)
@@ -105,9 +117,6 @@ async def jam_page(request: Request):
     return templates.TemplateResponse(request, "jam.html", {})
 
 
-import os
-
-
 @app.get("/primer/{stage_id}", response_class=HTMLResponse)
 async def primer_fragment(request: Request, stage_id: str):
     """Serve a theory primer HTML fragment for injection into the stage overlay."""
@@ -129,6 +138,7 @@ async def learn_page(request: Request):
             "modules":   MODULES,
             "semesters": SEMESTERS,
             "note_info": NOTE_SYSTEM,
+            "chapters":  scan_chapters("lessons"),
         },
     )
 
@@ -234,6 +244,65 @@ def _build_tracks(stages: list) -> list[dict]:
     return tracks
 
 
+# ---------------------------------------------------------------------------
+# Positions section — CAGED pentatonic shapes (Chapter 1 companion)
+# ---------------------------------------------------------------------------
+
+@app.get("/positions", response_class=HTMLResponse)
+async def positions_overview(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "positions.html",
+        {
+            "key_groups":     pos_module.KEY_GROUPS,
+            "shape_order":    pos_module.SHAPE_ORDER,
+            "b_string_shapes": list(pos_module.PASSES_B_STRING),
+            "all_positions": {
+                (p["group_id"], p["scale_type"], p["shape"]): p
+                for p in pos_module.all_positions()
+            },
+            "caged_data": json.dumps(pos_module.caged_overview_data()),
+        },
+    )
+
+
+@app.get("/positions/{group_id}/{scale_type}/full_neck", response_class=HTMLResponse)
+async def positions_full_neck(request: Request, group_id: str, scale_type: str):
+    lesson_data = pos_module.build_full_neck_lesson(group_id, scale_type)
+    if lesson_data is None:
+        raise HTTPException(status_code=404, detail="Full neck lesson not found")
+    return templates.TemplateResponse(
+        request,
+        "engine.html",
+        {
+            "lesson_json":  json.dumps(lesson_data),
+            "lesson_title": lesson_data["title"],
+        },
+    )
+
+
+@app.get("/positions/{group_id}/{scale_type}/{shape}", response_class=HTMLResponse)
+async def positions_shape(
+    request: Request,
+    group_id: str,
+    scale_type: str,
+    shape: str,
+):
+    pos = pos_module.get_position(group_id, scale_type, shape)
+    if pos is None:
+        raise HTTPException(status_code=404, detail="Position not found")
+
+    lesson_data = pos_module.build_shape_lesson(pos)
+    return templates.TemplateResponse(
+        request,
+        "engine.html",
+        {
+            "lesson_json":  json.dumps(lesson_data),
+            "lesson_title": lesson_data["title"],
+        },
+    )
+
+
 @app.get("/inspect", response_class=HTMLResponse)
 async def inspect_page(request: Request):
     # Annotate each stage with deduplicated pattern list for the table
@@ -307,6 +376,39 @@ async def trainer_page(request: Request):
             "question":    question,
             "svg":         svg,
             "note_system": NOTE_SYSTEM,
+        },
+    )
+
+
+# ---------------------------------------------------------------------------
+# Glossary — music theory term dictionary
+# ---------------------------------------------------------------------------
+
+@app.get("/glossary", response_class=HTMLResponse)
+async def glossary_page(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "glossary.html",
+        {
+            "terms":       glossary_module.TERMS,
+            "sorted_keys": glossary_module.SORTED_KEYS,
+            "anchor":      None,
+        },
+    )
+
+
+@app.get("/glossary/{term_id}", response_class=HTMLResponse)
+async def glossary_term(request: Request, term_id: str):
+    """Render the glossary page scrolled to a specific term via JS anchor logic."""
+    if term_id not in glossary_module.TERMS:
+        raise HTTPException(status_code=404, detail=f"Glossary term '{term_id}' not found")
+    return templates.TemplateResponse(
+        request,
+        "glossary.html",
+        {
+            "terms":       glossary_module.TERMS,
+            "sorted_keys": glossary_module.SORTED_KEYS,
+            "anchor":      term_id,
         },
     )
 

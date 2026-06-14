@@ -20,8 +20,9 @@ Every scale degree has a traditional name used across music theory, analysis, an
 | 5̂ | G | **Dominant** |
 | 6̂ | A | **Submediant** |
 | 7̂ | B | **Leading tone** |
+| 8̂ | C | **Tonic** |
 
-:::widget keyview {root: "C4", scale: "major", steps: false, labels: "degrees", interactive: true}
+:::widget scaleview {view: "keyboard", root: "C4", scale: "major", steps: false, labels: "degrees", interactive: true}
 :::
 
 ## Origins
@@ -50,7 +51,7 @@ The 7th degree has two names depending on how far it lies from the tonic above i
 
 The **leading tone** (e.g. B in C major) creates strong upward pull toward the tonic — its name reflects this melodic tendency. The **subtonic** (e.g. B♭ in c natural minor) sits a whole step below and resolves less urgently.
 
-:::widget keyview {root: "D4", scale: "natural_minor", steps: false, labels: "degrees", altered: [3, 6, 7], interactive: true}
+:::widget scaleview {view: "keyboard", root: "D4", scale: "natural_minor", steps: false, labels: "degrees", altered: [3, 6, 7], interactive: true}
 :::
 
 In d natural minor, scale degree 7̂ is C — a whole step below D. This is the **Subtonic**, not the Leading tone.

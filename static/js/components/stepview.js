@@ -56,6 +56,7 @@
       this.kbLow = opts.low || "C4";
       this.kbHigh = opts.high || "C5";
       this.frets = opts.frets != null ? parseInt(opts.frets, 10) : 7;
+      this.stringSpacing = opts.stringSpacing != null ? parseInt(opts.stringSpacing, 10) : null;
       this.circleSize = opts.circleSize || "200px";
 
       this.highlightSci = [];
@@ -131,12 +132,14 @@
         this._fbWrap.style.position = "relative";
         this.root.appendChild(this._fbWrap);
 
-        this._fb = new (FB())(this._fbWrap, {
+        const fbOpts = {
           frets: this.frets,
           highlight: this.highlightSci,
           labels: "marks",
           interactive: this.interactive
-        });
+        };
+        if (this.stringSpacing != null) fbOpts.stringSpacing = this.stringSpacing;
+        this._fb = new (FB())(this._fbWrap, fbOpts);
 
         this._drawFbOverlay();
       }

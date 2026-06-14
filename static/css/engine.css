@@ -142,6 +142,25 @@
   margin: 8px 0;
 }
 
+/* All links inside lesson prose. */
+.mte-md a {
+  color: var(--accent, #5555ff);
+  text-decoration: none;
+}
+.mte-md a:hover { text-decoration: underline; }
+
+/* Glossary links inside lesson prose — styled distinctly from plain hyperlinks. */
+.mte-md a[href^="/glossary"] {
+  color: var(--accent, #5555ff);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--accent, #5555ff);
+  padding-bottom: 1px;
+}
+.mte-md a[href^="/glossary"]:hover {
+  background: rgba(85, 85, 255, 0.1);
+  border-radius: 2px;
+}
+
 /* Markdown pipe tables. */
 .mte-md-table {
   width: 100%;

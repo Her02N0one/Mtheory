@@ -68,7 +68,9 @@ The staff and the keyboard are two views of the *same* pitches. Below, a note on
 the treble staff sits above the keyboard that plays it. Press a key and watch its
 notehead light up on the staff; the two always agree.
 
-:::widget staffcompanion {low: "C4", high: "C6", highlight: "C4", sync: true}
+:::widget staff {sync: "g1", low: "C4", high: "C6", highlight: "C4"}
+:::
+:::widget keyboard {sync: "g1", low: "C4", high: "C6"}
 :::
 
 Look at **[[C4]]** — one ledger line *below* the staff on the left, and the white
@@ -95,7 +97,11 @@ This shift lets the full guitar range fit inside a single treble staff (with jus
 
 Here is the full guitar sounding range mapped to its written staff positions. Play any fret or key — watch the written note light on the staff above it.
 
-:::widget staffcompanion {low: "E2", high: "E5", clef: "guitar", guitar: true, frets: 15, labels: "none", sync: true}
+:::widget staff {sync: "g2", low: "E2", high: "E5", clef: "guitar"}
+:::
+:::widget keyboard {sync: "g2", low: "E2", high: "E5"}
+:::
+:::widget fretboard {sync: "g2", frets: 15, labels: "none", lingerMs: 3500}
 :::
 
 The six **open strings** sit at the edges: [[E2]] and [[A2]] and [[D3]] hang below the staff on ledger lines (written up as E3 A3 D4), while [[G3]] [[B3]] [[E4]] live at the bottom of the staff and just above it (written G4 B4 E5). At the 15th fret the high E string reaches **[[G#5]]** sounding, written as G#6 — well above the staff. That is the full guitar range in one clef.
@@ -106,7 +112,7 @@ The guitar's sounding range spans [[E2]] (open low-E string) to about [[E6]] —
 
 Here are all six open strings plotted at their **actual sounding pitches**:
 
-:::widget grandstaff {notes: ["E2", "A2", "D3", "G3", "B3", "E4"], labels: "names", interactive: true}
+:::widget staff {clef: "grand", notes: ["E2", "A2", "D3", "G3", "B3", "E4"], labels: "names", interactive: true}
 :::
 
 :::callout info

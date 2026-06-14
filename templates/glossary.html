@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Mtheory | Glossary{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="/static/css/glossary.css?v=1">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="gls-layout">
+
+  <!-- ── Left sidebar: alphabetical index ──────────────────────────────── -->
+  <aside class="gls-sidebar">
+    <h2 class="gls-sidebar__title">Terms</h2>
+    <nav class="gls-index">
+      {% for key in sorted_keys %}
+      <a class="gls-index__link" href="/glossary#{{ key }}">
+        {{ terms[key].title }}
+      </a>
+      {% endfor %}
+    </nav>
+  </aside>
+
+  <!-- ── Main content: term entries ────────────────────────────────────── -->
+  <main class="gls-content">
+    <header class="gls-header">
+      <h1 class="gls-header__title">Music Theory Glossary</h1>
+      <p class="gls-header__sub">
+        Definitions for terms used throughout the lessons.
+        Click any term in the index to jump to it, or link directly via
+        <code>/glossary#term-id</code>.
+      </p>
+    </header>
+
+    {% for key in sorted_keys %}
+    {% set term = terms[key] %}
+    <article class="gls-term" id="{{ key }}">
+      <h2 class="gls-term__title">{{ term.title }}</h2>
+      <p class="gls-term__short">{{ term.short }}</p>
+      <div class="gls-term__body" data-md="{{ term.body | e }}"></div>
+
+      {% if term.related %}
+      <div class="gls-term__related">
+        <span class="gls-related__label">See also:</span>
+        {% for rel_id in term.related %}
+        {% if rel_id in terms %}
+        <a class="gls-related__link" href="/glossary#{{ rel_id }}">{{ terms[rel_id].title }}</a>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+    </article>
+    {% endfor %}
+  </main>
+
+</div>
+
+{% if anchor %}
+<script>
+  // Scroll to the requested term once the page loads.
+  window.addEventListener("DOMContentLoaded", function () {
+    var el = document.getElementById({{ anchor | tojson }});
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+</script>
+{% endif %}
+
+<script>
+  // Render markdown bodies after the page loads.
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".gls-term__body[data-md]").forEach(function (el) {
+      var md = el.getAttribute("data-md");
+      el.innerHTML = marked.parse(md);
+      el.removeAttribute("data-md");
+    });
+  });
+</script>
+{% endblock %}

@@ -86,7 +86,9 @@ are your anchors:
 string: it's the **B-string / 1st fret**, or equally the **A-string / 3rd fret**.
 :::
 
-:::widget companion {instruments: [keyboard, fretboard], highlight: "C4", sync: true, frets: 5}
+:::widget keyboard {sync: "g1", low: "E2", high: "A4", highlight: "C4"}
+:::
+:::widget fretboard {sync: "g1", frets: 5, highlight: "C4", lingerMs: 3500}
 :::
 
 Find **both** playable [[C4]]s inside the first five frets — the B-string/1st-fret and the

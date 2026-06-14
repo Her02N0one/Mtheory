@@ -1635,3 +1635,158 @@ main {
   .theory-panel { grid-template-columns: 1fr; }
   .theory-left  { flex-direction: column; align-items: center; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   LEARN PAGE — theory chapters (Engine/DSL lesson system)
+══════════════════════════════════════════════════════════════════════════ */
+
+.chapters-section {
+  margin-bottom: 2.5rem;
+}
+
+.chapters-header {
+  margin-bottom: 1rem;
+}
+.chapters-header__title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  margin: 0 0 0.25rem;
+  color: var(--fg);
+}
+.chapters-header__sub {
+  font-size: 0.84rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ── Chapter block (collapsible) ─────────────────────────────────────── */
+
+.chapter-block {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  background: var(--bg-card);
+}
+
+.chapter-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  background: var(--bg-card);
+  transition: background 0.12s;
+}
+.chapter-header:hover {
+  background: color-mix(in srgb, var(--bg-card) 85%, white 15%);
+}
+
+.chapter-num {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  white-space: nowrap;
+}
+
+.chapter-header-text {
+  flex: 1;
+  min-width: 0;
+}
+.chapter-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.chapter-progress {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.chapter-chevron {
+  font-size: 0.65rem;
+  color: var(--muted);
+  transition: transform 0.15s;
+}
+
+/* ── Lesson rows ─────────────────────────────────────────────────────── */
+
+.chapter-lesson-list {
+  border-top: 1px solid var(--border);
+}
+.chapter-lesson-list.chapter-collapsed {
+  display: none;
+}
+
+.chapter-lesson {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  text-decoration: none;
+  color: var(--fg);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+}
+.chapter-lesson:last-child { border-bottom: none; }
+.chapter-lesson:hover { background: color-mix(in srgb, var(--bg-card) 75%, white 25%); }
+
+.chapter-lesson__id {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  min-width: 2.6rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.chapter-lesson__title {
+  flex: 1;
+  font-size: 0.87rem;
+  line-height: 1.35;
+}
+
+.chapter-lesson__time {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.chapter-lesson__status {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #3ec46d;
+  width: 1.2rem;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+/* Completed lessons: subtle green tint on the ID chip */
+.chapter-lesson--done .chapter-lesson__id {
+  border-color: #3ec46d;
+  color: #3ec46d;
+}
+
+/* Next-up lesson: accent left border to guide the eye */
+.chapter-lesson--next {
+  border-left: 3px solid var(--accent);
+  padding-left: calc(1rem - 2px);
+}
+.chapter-lesson--next .chapter-lesson__id {
+  border-color: var(--accent);
+  color: var(--accent);
+}

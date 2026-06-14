@@ -1,0 +1,161 @@
+/* scaledrill.css — Sequential scale pattern drill widget ---------------------- */
+
+.msd-drill {
+  background: var(--bg-card, #1a1a2e);
+  border: 1px solid var(--border, #2a2a4a);
+  border-radius: var(--radius-lg, 12px);
+  padding: 20px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Note card ── */
+.msd-drill__card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Colored shape swatch matching the note's color */
+.msd-drill__swatch {
+  display: block;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  background: var(--muted, #444);
+}
+
+.msd-drill__card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-grow: 1;
+}
+
+/* Large note name */
+.msd-drill__note-name {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--fg, #f0f0f0);
+  letter-spacing: 0.5px;
+}
+
+/* "note 3 of 8" subtitle */
+.msd-drill__subtitle {
+  font-size: 12px;
+  color: var(--muted, #888);
+}
+
+/* Finger hint: "finger 2" or "open string" shown below subtitle */
+.msd-drill__finger-hint {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--accent, #5555ff);
+  min-height: 14px;
+  text-transform: uppercase;
+}
+.msd-fh--open {
+  color: var(--muted, #aaa);
+  font-weight: 600;
+}
+
+/* Right: progress + mic */
+.msd-drill__card-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.msd-drill__progress {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted, #888);
+  white-space: nowrap;
+}
+
+/* ── Sequence strip ── */
+.msd-drill__strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 4px 0;
+}
+
+.msd-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 5px;
+  border: 1.5px solid var(--border, #444);
+  background: transparent;
+  color: var(--muted, #888);
+  transition: background 0.15s, color 0.15s, opacity 0.15s;
+}
+
+.msd-chip--past {
+  opacity: 0.35;
+}
+
+.msd-chip--current {
+  box-shadow: 0 0 0 2px currentColor;
+  transform: scale(1.1);
+  font-size: 12px;
+}
+
+.msd-chip--future {
+  opacity: 0.55;
+}
+
+/* ── Feedback line ── */
+.msd-drill__feedback {
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 18px;
+  padding: 0 2px;
+}
+.msd-fb--correct { color: var(--success, #00ba35); }
+.msd-fb--wrong   { color: var(--error,   #ff3366); }
+.msd-fb--warn    { color: var(--warn,    #ffb700); }
+
+/* ── Mic controls ── */
+.msd-drill__mic-btn {
+  background: transparent;
+  border: 1px solid var(--border, #444);
+  border-radius: var(--radius-sm, 4px);
+  color: var(--muted, #888);
+  cursor: pointer;
+  font-size: 11px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+}
+.msd-drill__mic-btn::before { content: "🎤 "; }
+.msd-drill__mic-btn:hover {
+  color: var(--fg, #f0f0f0);
+  border-color: var(--fg, #f0f0f0);
+}
+.msd-drill__mic-btn--active {
+  border-color: var(--accent, #5555ff);
+  color: var(--accent, #5555ff);
+}
+
+/* Intonation badge shown when mic is active */
+.msd-drill__mic-indicator {
+  font-size: 12px;
+  color: var(--muted, #888);
+  min-height: 16px;
+  letter-spacing: 0.3px;
+}
+.msd-mic--intune { color: var(--success, #00ba35); }
+.msd-mic--close  { color: var(--warn,    #ffb700); }
+.msd-mic--off    { color: var(--error,   #ff3366); }

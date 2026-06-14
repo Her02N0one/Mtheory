@@ -15,7 +15,7 @@ Musicians recognise three minor scale forms. Each is most easily understood as a
 
 The natural minor scale lowers the **♭3̂**, **♭6̂**, and **♭7̂** of the major scale.
 
-:::widget keyview {root: "C4", scale: "natural_minor", steps: true, labels: "degrees", altered: [3, 6, 7], interactive: true}
+:::widget scaleview {view: "keyboard", root: "C4", scale: "natural_minor", steps: true, labels: "degrees", altered: [3, 6, 7], interactive: true}
 :::
 
 The three amber keys — E♭, A♭, and B♭ — are each one half step lower than in C major. Notice how the half steps shift: they now fall between **2̂–3̂** and **5̂–6̂** instead of 3̂–4̂ and 7̂–8̂.
@@ -24,7 +24,7 @@ The three amber keys — E♭, A♭, and B♭ — are each one half step lower t
 
 The harmonic minor scale lowers only **♭3̂** and **♭6̂** — the 7̂ stays raised, creating a large **augmented second** (1½ steps) between 6̂ and 7̂.
 
-:::widget keyview {root: "C4", scale: "harmonic_minor", steps: true, labels: "degrees", altered: [3, 6], interactive: true}
+:::widget scaleview {view: "keyboard", root: "C4", scale: "harmonic_minor", steps: true, labels: "degrees", altered: [3, 6], interactive: true}
 :::
 
 That raised 7̂ acts as a **leading tone**, pulling strongly upward to 1̂. This is the minor form most used in chord progressions.
@@ -37,12 +37,12 @@ The interval from A♭ to B♮ is an **augmented second** — 1½ steps (3 half 
 
 Because the augmented second is awkward to sing, composers developed a smoother ascending form. The melodic minor ascending lowers only **♭3̂** — the 6̂ and 7̂ are natural.
 
-:::widget keyview {root: "C4", scale: "melodic_minor", steps: true, labels: "degrees", altered: [3], interactive: true}
+:::widget scaleview {view: "keyboard", root: "C4", scale: "melodic_minor", steps: true, labels: "degrees", altered: [3], interactive: true}
 :::
 
 The **descending form** is the same as natural minor — the raised 6̂ and 7̂ return to their lowered positions on the way back down.
 
-:::widget keyview {root: "C4", scale: "melodic_minor_desc", steps: true, labels: "degrees", altered: [3, 6, 7], interactive: true}
+:::widget scaleview {view: "keyboard", root: "C4", scale: "melodic_minor_desc", steps: true, labels: "degrees", altered: [3, 6, 7], interactive: true}
 :::
 
 ## Comparison: All Three Forms
@@ -65,11 +65,31 @@ Use the tabs below to switch between all four forms of C minor. Amber keys show 
 
 The W–H pattern of a minor scale translates to the neck exactly as it did in C major: whole steps are two frets, half steps are one. The amber keys (♭3̂, ♭6̂, ♭7̂) each sit one fret lower than the corresponding note in C major.
 
-:::widget keyview {root: "C3", scale: "natural_minor", steps: true, labels: "degrees", altered: [3, 6, 7], fretboard: true, frets: 7, interactive: true}
+:::widget scaleview {view: "keyboard", root: "C3", scale: "natural_minor", steps: true, labels: "degrees", altered: [3, 6, 7], fretboard: true, frets: 7, interactive: true}
 :::
 
 :::callout key
 The scale still climbs across three strings in the same general pattern as C major. Only the amber degrees shift by one fret — the fingering shape is nearly identical.
+:::
+
+## Play C natural minor on the neck
+
+Three degrees lower than C major — that means three frets drop by one. The pattern feels almost the same in your hand; train your ear to hear the difference.
+
+Play every note of C natural minor ascending from [[C3]]. The three amber notes (E♭, A♭, B♭) each sit one fret lower than in C major.
+
+:::widget scaledrill {root: "C3", scale: "natural_minor", pattern: "up", strings: [1, 2, 3], frets: 7}
+:::
+
+:::checkpoint {needs: 8, of: 8, on_pass: {set_flag: c_minor_neck_done}}
+:::
+
+Now the minor pentatonic. Remove degrees 2 and 6 from natural minor (D and A♭) and you get the five notes of **C minor pentatonic**: [[C]] E♭ [[F]] [[G]] B♭. This is the foundation of blues guitar.
+
+:::widget scaledrill {root: "C3", scale: "pentatonic_minor", pattern: "up_down", strings: [1, 2, 3], frets: 7}
+:::
+
+:::checkpoint {needs: 10, of: 10, on_pass: {complete: true}}
 :::
 
 ---

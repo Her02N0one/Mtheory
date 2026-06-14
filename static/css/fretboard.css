@@ -22,7 +22,7 @@
 .mf-row {
   display: flex;
   align-items: stretch;
-  height: 34px;
+  height: var(--mf-row-h, 34px);
 }
 
 /* String name on the left gutter. */
@@ -67,8 +67,8 @@
   border-left: none;
 }
 .mf-cell--open::before { display: none; }
-/* The nut: thick bright wire at fret 1's left edge. */
-.mf-row .mf-cell:nth-child(3) { border-left-width: 4px; border-left-color: #cdbb9a; }
+/* The nut: thick bright wire at fret 1's left edge (open-position only). */
+.mf-cell--nut { border-left-width: 4px; border-left-color: #cdbb9a; }
 
 .mf-cell:hover::after {
   content: "";
@@ -138,6 +138,19 @@
 .mf-dot--square { border-radius: 3px; }
 .mf-dot--ref { opacity: 0.42; }
 .mf-dot--hi { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5); }
+/* Orphan: note exists in the scale but falls outside any complete root-to-root octave span.
+   Rendered hollow with a dashed border so the student sees the incomplete edges of a box. */
+.mf-dot--orphan {
+  border: 1.5px dashed currentColor;
+  opacity: 0.50;
+  background: transparent !important;
+}
+/* Region-mode orphan: hollow white dashed ring on colored background */
+.mf-dot--region-orphan {
+  border: 1.5px dashed rgba(255,255,255,0.45) !important;
+  background: transparent !important;
+  opacity: 0.55;
+}
 /* Sticky pin placed by the user in a fill drill. */
 .mf-dot--found { box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.75), 0 1px 3px rgba(0,0,0,0.5); }
 
@@ -190,4 +203,43 @@
   border-radius: 50%;
   background: var(--error, #ee0043);
   transform: translate(-50%, -50%);
+}
+
+/* Multi-view dots — CAGED shape overview (setMultiView) */
+.mf-dot--multi {
+  opacity: 0.55;
+  min-width: 11px;
+  height: 11px;
+  font-size: 0;
+  line-height: 1;
+}
+
+.mf-dot--multi-root {
+  opacity: 1;
+  min-width: 18px;
+  height: 18px;
+  font-size: 9px;
+  font-weight: 800;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+/* Register-split view: separator at the G/B string boundary */
+.mf-row--reg-break {
+  border-bottom: 1.5px dashed rgba(200, 175, 110, 0.40);
+  margin-bottom: 3px;
+}
+
+/* Region-band mode: white dots on colored section backgrounds */
+.mf-dot--region-root {
+  min-width: 18px;
+  height: 18px;
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.5);
+}
+.mf-dot--region-ref {
+  min-width: 9px;
+  height: 9px;
+  font-size: 0;
+  opacity: 0.8;
 }

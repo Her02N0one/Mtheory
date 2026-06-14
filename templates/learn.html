@@ -14,6 +14,50 @@
     <a href="/trainer" class="btn-secondary btn-sm">→ Free Training</a>
   </div>
 
+  <!-- ── Theory Chapters (Engine/DSL lesson system) ───────────────────── -->
+  {% if chapters %}
+  <section class="chapters-section">
+    <div class="chapters-header">
+      <h2 class="chapters-header__title">Theory Chapters</h2>
+      <p class="chapters-header__sub">
+        Read-and-play lessons covering music theory from the ground up.
+        Complete each lesson to unlock the next.
+      </p>
+    </div>
+
+    {% for ch in chapters %}
+    <div class="chapter-block" id="ch-{{ ch.num }}">
+
+      <div class="chapter-header" onclick="toggleChapter('{{ ch.num }}')"
+           role="button" aria-expanded="true" aria-controls="chlessons-{{ ch.num }}">
+        <span class="chapter-num">Ch {{ ch.num }}</span>
+        <div class="chapter-header-text">
+          <span class="chapter-title">{{ ch.title }}</span>
+        </div>
+        <span class="chapter-progress" id="chprog-{{ ch.num }}"></span>
+        <span class="chapter-chevron" id="chev-{{ ch.num }}">▼</span>
+      </div>
+
+      <div class="chapter-lesson-list" id="chlessons-{{ ch.num }}">
+        {% for lesson in ch.lessons %}
+        <a class="chapter-lesson"
+           href="/learn/x/{{ lesson.id }}"
+           data-lid="{{ lesson.id }}">
+          <span class="chapter-lesson__id">{{ lesson.id }}</span>
+          <span class="chapter-lesson__title">{{ lesson.title }}</span>
+          {% if lesson.estimated_min %}
+          <span class="chapter-lesson__time">{{ lesson.estimated_min }} min</span>
+          {% endif %}
+          <span class="chapter-lesson__status" data-lid="{{ lesson.id }}"></span>
+        </a>
+        {% endfor %}
+      </div>
+
+    </div>
+    {% endfor %}
+  </section>
+  {% endif %}
+
   {% for sem in semesters %}
   <section class="semester-section" id="sem-{{ sem.id }}" data-sem="{{ sem.id }}">
 
@@ -93,6 +137,53 @@
 
 <script>
 const PROGRESS_KEY = 'mtheory-progress';
+
+// ── Chapter lesson progress ──────────────────────────────────────────────────
+
+function chapterLessonDone(lid) {
+  return localStorage.getItem("lesson_complete:" + lid) === "1";
+}
+
+function toggleChapter(num) {
+  const list    = document.getElementById("chlessons-" + num);
+  const chevron = document.getElementById("chev-" + num);
+  const block   = document.getElementById("ch-" + num);
+  const isOpen  = !list.classList.contains("chapter-collapsed");
+  list.classList.toggle("chapter-collapsed", isOpen);
+  chevron.textContent = isOpen ? "▶" : "▼";
+  block.querySelector(".chapter-header").setAttribute("aria-expanded", String(!isOpen));
+}
+
+function renderChapters() {
+  document.querySelectorAll(".chapter-lesson").forEach(function (row) {
+    var lid    = row.dataset.lid;
+    var status = row.querySelector(".chapter-lesson__status");
+    var done   = chapterLessonDone(lid);
+    row.classList.toggle("chapter-lesson--done", done);
+    if (status) status.textContent = done ? "✓" : "";
+  });
+
+  document.querySelectorAll(".chapter-block").forEach(function (block) {
+    var rows  = block.querySelectorAll(".chapter-lesson");
+    var total = rows.length;
+    var done  = 0;
+    rows.forEach(function (r) { if (chapterLessonDone(r.dataset.lid)) done++; });
+    var prog = block.querySelector(".chapter-progress");
+    if (prog) prog.textContent = done + " / " + total;
+
+    // Mark the first incomplete lesson so users can see where to continue.
+    var foundNext = false;
+    rows.forEach(function (r) {
+      r.classList.remove("chapter-lesson--next");
+      if (!foundNext && !chapterLessonDone(r.dataset.lid)) {
+        r.classList.add("chapter-lesson--next");
+        foundNext = true;
+      }
+    });
+  });
+}
+
+renderChapters();
 
 function loadProgress() {
   try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || '{}'); }

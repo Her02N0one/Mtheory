@@ -37,7 +37,7 @@ steps** in each octave: C–D, D–E, F–G, G–A, and A–B.
 Notice how a whole step looks different on the guitar depending on whether you 
 stay on the same string (two frets up) or cross to the next string (drop back three frets):
 
-:::widget stepview {steps: [{from: "C", type: "whole"}, {from: "D", type: "whole"}, {from: "F", type: "whole"}, {from: "G", type: "whole"}, {from: "A", type: "whole"}], instruments: ["keyboard", "chromacircle", "fretboard"], low: "C4", high: "C5", frets: 7}
+:::widget stepview {steps: [{from: "C", type: "whole"}, {from: "D", type: "whole"}, {from: "F", type: "whole"}, {from: "G", type: "whole"}, {from: "A", type: "whole"}], instruments: ["keyboard", "chromacircle", "fretboard"], low: "C4", high: "C5", frets: 7, stringSpacing: 50}
 :::
 
 ## Phase 2 — C major: the pattern on white keys
@@ -51,7 +51,7 @@ the C major scale.
 The major scale always follows this pattern: **W – W – H – W – W – W – H**
 :::
 
-:::widget keyview {root: "C4", scale: "major", steps: true, labels: "degrees", interactive: true}
+:::widget scaleview {view: "keyboard", root: "C4", scale: "major", steps: true, labels: "degrees", interactive: true}
 :::
 
 The **half steps** (shown in amber) fall between degrees **3 and 4** ([[E]]–[[F]])
@@ -62,7 +62,7 @@ and between **7 and 8** ([[B]]–[[C]]). Every other adjacent pair is a whole st
 The major scale splits naturally into two identical four-note groups called
 **tetrachords**. Each tetrachord has the same internal pattern: **W – W – H**.
 
-:::widget keyview {root: "C4", scale: "major", steps: true, labels: "both", tetrachords: true, interactive: true}
+:::widget scaleview {view: "keyboard", root: "C4", scale: "major", steps: true, labels: "both", tetrachords: true, interactive: true}
 :::
 
 :::callout key
@@ -76,7 +76,7 @@ find the **W–W–H** pattern, jump a whole step, then repeat.
 Try playing seven white keys from [[G4]] to [[G5]] and compare the W/H pattern
 to C major:
 
-:::widget keyview {notes: ["G4","A4","B4","C5","D5","E5","F5","G5"], steps: true, labels: "none", tetrachords: true, interactive: true}
+:::widget scaleview {view: "keyboard", notes: ["G4","A4","B4","C5","D5","E5","F5","G5"], steps: true, labels: "none", tetrachords: true, interactive: true}
 :::
 
 :::callout warn
@@ -102,7 +102,7 @@ always appears **before** the notehead it modifies.
 :::widget staff {notes: ["G4", "A4", "B4", "C5", "D5", "E5", "F#5", "G5"], interactive: true}
 :::
 
-:::widget keyview {root: "G4", scale: "major", steps: true, labels: "both", tetrachords: true, interactive: true}
+:::widget scaleview {view: "keyboard", root: "G4", scale: "major", steps: true, labels: "both", tetrachords: true, interactive: true}
 :::
 
 Both tetrachords now read **W–W–H**. The only difference from [[C]] major is that
@@ -150,7 +150,7 @@ The coloured dots on the neck are the eight [[C]] major scale notes; the number 
 dot is the scale degree. The lines connecting consecutive degrees are labelled **W** (whole
 step, two frets) or **H** (half step, one fret).
 
-:::widget keyview {root: "C3", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
+:::widget scaleview {view: "keyboard", root: "C3", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
 :::
 
 :::callout key
@@ -175,11 +175,53 @@ The diagram below starts from [[G2]] on the low-[[E2]] string (fret 3) and follo
 everything is identical **except degree 7**, where the H label has moved one fret higher
 because F natural became [[F#]].
 
-:::widget keyview {root: "G2", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
+:::widget scaleview {view: "keyboard", root: "G2", scale: "major", steps: true, labels: "degrees", fretboard: true, frets: 7}
 :::
 
 :::callout info
 The shape of a major scale on the guitar is the same in every key — only the **starting
 fret** moves. Shift the entire [[C]] major pattern up two frets and you get [[D]] major; up four
 frets gives [[E]] major. The W–W–H–W–W–W–H rule (2–2–1–2–2–2–1 frets) never changes.
+:::
+
+## Phase 10 — Play C major on the neck
+
+Knowing the shape is not the same as owning it. Below, the fretboard is waiting for you to **play every note of C major in order**, ascending from [[C3]] on the A string. The dots show all valid positions — pick any one for each note.
+
+Play each note shown in the prompt. Wrong guesses replay the pitch so you can find it by ear. You must play all 8 notes to complete this phase.
+
+:::widget scaledrill {root: "C3", scale: "major", pattern: "up", strings: [1, 2, 3], frets: 7}
+:::
+
+:::checkpoint {needs: 8, of: 8, on_pass: {set_flag: c_major_neck_done}}
+:::
+
+## Phase 11 — Play G major on the neck
+
+G major uses the same W–W–H shape. The only difference is [[F#]] at degree 7. Find it — it sits one fret higher than the [[F]] you know.
+
+:::widget scaledrill {root: "G2", scale: "major", pattern: "up", strings: [0, 1, 2], frets: 7}
+:::
+
+:::checkpoint {needs: 8, of: 8, on_pass: {set_flag: g_major_neck_done}}
+:::
+
+## Phase 12 — The pentatonic shortcut
+
+The **major pentatonic scale** is C major with two notes removed — the 4th ([[F]]) and the 7th ([[B]]). What remains is five notes that sound good over almost anything in the key. It is the most-played scale in rock, blues, and country guitar.
+
+:::callout key
+C major pentatonic: **[[C]] [[D]] [[E]] [[G]] [[A]]** — degrees 1, 2, 3, 5, 6.
+Remove the half-step neighbours ([[E]]–[[F]] and [[B]]–[[C]]) and every adjacent pair becomes a whole step or larger. No clash, no tension — pure consonance.
+:::
+
+:::widget scaleview {view: "keyboard", root: "C4", scale: "major", steps: true, labels: "degrees", interactive: true}
+:::
+
+Now play the pentatonic version. Five notes instead of eight — but you still need to own every one.
+
+:::widget scaledrill {root: "C3", scale: "pentatonic_major", pattern: "up_down", strings: [1, 2, 3], frets: 7}
+:::
+
+:::checkpoint {needs: 10, of: 10, on_pass: {complete: true}}
 :::

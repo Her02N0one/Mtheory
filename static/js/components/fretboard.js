@@ -21,6 +21,13 @@
   function KB() { return global.MtheoryKeyboard; }
   function midiAt(stringIdx, fret) { return OPEN_MIDI[stringIdx] + fret; }
 
+  function _hexToRgba(hex, alpha) {
+    var r = parseInt(hex.slice(1, 3), 16);
+    var g = parseInt(hex.slice(3, 5), 16);
+    var b = parseInt(hex.slice(5, 7), 16);
+    return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+  }
+
   class Fretboard {
     /* opts:
      *   strings   {number[]} string indices to show (default [0..5], low→high)
@@ -30,8 +37,10 @@
      *   quiz      {object}   { target: 'C4' | 'C' } — quiz mode, emits fret_quizzed
      *   labels    {string}   'marks' (default, only on highlight) | 'all' | 'none'
      *   audio     {boolean|function}  true | false | (midi, freq) => {}
-     *   onEvent   {function} callback receiving every emitted event object
-     *   emitDom   {boolean}  dispatch bubbling DOM events (default true)
+     *   onEvent      {function} callback receiving every emitted event object
+     *   emitDom      {boolean}  dispatch bubbling DOM events (default true)
+     *   registerView {boolean}  show a visual separator at the G/B string boundary
+     *                           and lighter region tint on upper-register rows (B, e)
      */
     constructor(container, opts) {
       opts = opts || {};
@@ -58,21 +67,39 @@
       this.quiz = opts.quiz || null;
       this.quizTargetPc = this.quiz != null ? this._toPitchClass(this.quiz.target) : null;
 
+      // Fret window: fretMin is the lowest fret shown (default 0 = open position).
+      // frets is still the *highest* fret shown.  Mid-neck boxes set fretMin > 0.
+      this.fretMin = opts.fretMin != null ? parseInt(opts.fretMin, 10) : 0;
+
+      // Per-instance row height in px (stringSpacing prop). Default 34.
+      this.stringSpacing = opts.stringSpacing != null ? opts.stringSpacing : 34;
+
       // Linger: ms notes remain visible after being played (0 = off).
       this.lingerMs = opts.lingerMs != null ? opts.lingerMs : 0;
       this._lingerMidi = new Map(); // midi -> timeoutId
 
-      this._cellEls = new Map(); // "s:f" -> element
+      // When true, renders a separator between the G string row and B string row
+      // (the G→B tuning anomaly boundary) and dims the upper-register region bands.
+      this.registerView = opts.registerView || false;
+
+      this._cellEls    = new Map(); // "s:f" -> element
+      this._multiGroups = null;    // set by setMultiView()
+      this._regions     = null;    // set by setRegionsAndView()
+      // orphanMidi: scale notes that fall outside any complete root-to-root octave span.
+      // Rendered as hollow dashed dots so the student can see where complete octaves end.
+      this.orphanMidi  = this._toMidiSet(opts.orphan);
       this.render();
     }
 
-    // Accept 'C4' | ['C4','E4'] | 'C' (bare name -> every matching position).
+    // Accept MIDI int | 'C4' | ['C4','E4'] | 'C' (bare name -> every matching position).
     _toMidiSet(spec) {
       const set = new Set();
       if (spec == null) return set;
       const list = Array.isArray(spec) ? spec : [spec];
       const k = KB();
       list.forEach((item) => {
+        // Direct numeric MIDI value — skip string-parsing entirely.
+        if (typeof item === "number") { set.add(item); return; }
         const midi = k && k.midiOfSci ? k.midiOfSci(item) : null;
         if (midi != null && /\d/.test(item)) { set.add(midi); return; }
         // bare name -> all positions of that pitch class in range
@@ -91,13 +118,14 @@
     }
     _forEachPos(fn) {
       this.strings.forEach((s) => {
-        for (let f = 0; f <= this.frets; f++) fn(s, f, midiAt(s, f));
+        for (let f = this.fretMin; f <= this.frets; f++) fn(s, f, midiAt(s, f));
       });
     }
 
     render() {
       const k = KB();
       this.root.classList.add("mf-fretboard");
+      if (this.registerView) this.root.classList.add("mf-fretboard--register-view");
       this.root.innerHTML = "";
       this._cellEls.clear();
 
@@ -106,18 +134,23 @@
 
       const grid = document.createElement("div");
       grid.className = "mf-grid";
-      grid.style.setProperty("--mf-frets", String(this.frets));
+      grid.style.setProperty("--mf-frets", String(this.frets - this.fretMin));
+      grid.style.setProperty("--mf-row-h", this.stringSpacing + "px");
 
       rows.forEach((s) => {
         const row = document.createElement("div");
-        row.className = "mf-row";
+        // mf-row--upper-reg  : B and high-E strings (upper register, above the G→B gap)
+        // mf-row--reg-break  : B string row specifically — the separator is drawn beneath it
+        row.className = "mf-row"
+          + (this.registerView && (s === 4 || s === 5) ? " mf-row--upper-reg" : "")
+          + (this.registerView && s === 4 ? " mf-row--reg-break" : "");
 
         const label = document.createElement("span");
         label.className = "mf-string-label";
         label.textContent = STRING_LABEL[s];
         row.appendChild(label);
 
-        for (let f = 0; f <= this.frets; f++) {
+        for (let f = this.fretMin; f <= this.frets; f++) {
           row.appendChild(this._makeCell(s, f));
         }
         grid.appendChild(row);
@@ -129,10 +162,11 @@
       const spacer = document.createElement("span");
       spacer.className = "mf-string-label";
       nums.appendChild(spacer);
-      for (let f = 0; f <= this.frets; f++) {
+      for (let f = this.fretMin; f <= this.frets; f++) {
         const cell = document.createElement("span");
         cell.className = "mf-fretnum" + (INLAY_FRETS[f] ? " mf-fretnum--inlay" : "");
-        cell.textContent = f === 0 ? "" : String(f);
+        // Open string column has no fret number; mid-neck always shows the actual fret.
+        cell.textContent = (f === 0) ? "" : String(f);
         nums.appendChild(cell);
       }
       grid.appendChild(nums);
@@ -152,25 +186,82 @@
 
       const cell = document.createElement("button");
       cell.type = "button";
-      cell.className = "mf-cell" + (fret === 0 ? " mf-cell--open" : "");
+      cell.className = "mf-cell"
+        + (fret === 0 ? " mf-cell--open" : "")
+        + (fret === 1 && this.fretMin === 0 ? " mf-cell--nut" : "");
       cell.dataset.string = String(stringIdx);
       cell.dataset.fret = String(fret);
       cell.dataset.midi = String(midi);
 
-      const isHi = this.highlightMidi.has(midi);
-      const isRef = !isHi && this.referenceMidi.has(midi);
-      const showMark =
-        this.labels === "all" ||
-        (this.labels === "marks" && (isHi || isRef));
+      // Region-band background (CAGED section coloring — set by setRegionsAndView).
+      // Upper-register strings (B=4, high-E=5) get a lighter tint so the G→B
+      // register divide is visually obvious when registerView is enabled.
+      if (this._regions) {
+        for (var ri = 0; ri < this._regions.length; ri++) {
+          var rg = this._regions[ri];
+          if (fret >= rg.fmin && fret <= rg.fmax) {
+            var isUpperReg = this.registerView && (stringIdx === 4 || stringIdx === 5);
+            cell.style.background = _hexToRgba(rg.color, isUpperReg ? 0.10 : 0.25);
+            break;
+          }
+        }
+      }
 
-      if (showMark && style) {
-        const dot = document.createElement("span");
-        dot.className = "mf-dot mf-dot--" + style.shape +
-          (isHi ? " mf-dot--hi" : "") + (isRef ? " mf-dot--ref" : "");
-        dot.style.background = style.color;
-        dot.style.color = k.readableText(style.color);
-        dot.textContent = this.labelMap[midi] != null ? String(this.labelMap[midi]) : name;
-        cell.appendChild(dot);
+      if (this._multiGroups) {
+        // Multi-view (CAGED shape overview): each group gets its own color.
+        let matchedGroup = null;
+        let isRoot = false;
+        for (let gi = 0; gi < this._multiGroups.length; gi++) {
+          const g = this._multiGroups[gi];
+          if (g.midi.has(midi)) {
+            matchedGroup = g;
+            isRoot = g.rootMidi ? g.rootMidi.has(midi) : false;
+            break;
+          }
+        }
+        if (matchedGroup && style) {
+          const dot = document.createElement("span");
+          dot.className = "mf-dot mf-dot--" + style.shape + " mf-dot--multi" +
+            (isRoot ? " mf-dot--multi-root" : " mf-dot--multi-ref");
+          dot.style.background = matchedGroup.color;
+          dot.style.color = isRoot ? "#fff" : "transparent";
+          if (isRoot && matchedGroup.rootLabel) dot.textContent = matchedGroup.rootLabel;
+          cell.appendChild(dot);
+        }
+      } else {
+        const isHi   = this.highlightMidi.has(midi);
+        const isOrph = !isHi && this.orphanMidi.has(midi);
+        const isRef  = !isHi && !isOrph && this.referenceMidi.has(midi);
+        const showMark =
+          this.labels === "all" ||
+          (this.labels === "marks" && (isHi || isRef || isOrph));
+
+        if (showMark && style) {
+          const dot = document.createElement("span");
+          if (this._regions) {
+            // White/neutral dots on top of the colored region band.
+            dot.className = "mf-dot mf-dot--circle"
+              + (isHi ? " mf-dot--region-root" : isOrph ? " mf-dot--region-orphan" : " mf-dot--region-ref");
+            dot.style.background = isHi ? "rgba(255,255,255,0.93)" : isOrph ? "transparent" : "rgba(255,255,255,0.35)";
+            if (isOrph) dot.style.border = "1.5px dashed rgba(255,255,255,0.40)";
+            dot.style.color = "#111";
+            if (isHi) dot.textContent = this.labelMap[midi] != null ? String(this.labelMap[midi]) : name;
+          } else if (isOrph) {
+            // Orphan: hollow dashed dot in the note's color — outside a complete octave span.
+            dot.className = "mf-dot mf-dot--" + style.shape + " mf-dot--orphan";
+            dot.style.background  = "transparent";
+            dot.style.borderColor = style.color;
+            dot.style.color       = style.color;
+            dot.textContent = this.labelMap[midi] != null ? String(this.labelMap[midi]) : name;
+          } else {
+            dot.className = "mf-dot mf-dot--" + style.shape +
+              (isHi ? " mf-dot--hi" : "") + (isRef ? " mf-dot--ref" : "");
+            dot.style.background = style.color;
+            dot.style.color = k.readableText(style.color);
+            dot.textContent = this.labelMap[midi] != null ? String(this.labelMap[midi]) : name;
+          }
+          cell.appendChild(dot);
+        }
       }
 
       cell.addEventListener("pointerdown", (ev) => {
@@ -269,6 +360,38 @@
     // MIDI-keyed highlight (Companion sync by absolute sounding pitch).
     setHighlightMidi(midiSet) {
       this.highlightMidi = midiSet instanceof Set ? midiSet : new Set(midiSet || []);
+      this.render();
+    }
+
+    // Update highlight, reference, and orphan sets in one render pass.
+    // orphanMidi (optional): notes outside any complete root-to-root octave span,
+    // rendered as hollow dashed dots so the student sees where complete octaves end.
+    setView(highlightMidi, referenceMidi, orphanMidi) {
+      this._multiGroups = null;
+      this._regions     = null;
+      this.highlightMidi = highlightMidi instanceof Set ? highlightMidi : new Set(highlightMidi || []);
+      this.referenceMidi = referenceMidi instanceof Set ? referenceMidi : new Set(referenceMidi || []);
+      this.orphanMidi    = orphanMidi    instanceof Set ? orphanMidi    : new Set(orphanMidi    || []);
+      this.render();
+    }
+
+    // Region-band + note view: colors fret-column backgrounds by shape zone, then
+    // overlays neutral white dots for scale tones and roots.
+    // regions = [{fmin, fmax, color}], highlight/reference/orphan are MIDI Sets.
+    setRegionsAndView(regions, highlightMidi, referenceMidi, orphanMidi) {
+      this._multiGroups = null;
+      this._regions     = regions || null;
+      this.highlightMidi = highlightMidi instanceof Set ? highlightMidi : new Set(highlightMidi || []);
+      this.referenceMidi = referenceMidi instanceof Set ? referenceMidi : new Set(referenceMidi || []);
+      this.orphanMidi    = orphanMidi    instanceof Set ? orphanMidi    : new Set(orphanMidi    || []);
+      this.render();
+    }
+
+    // Multi-group coloring for CAGED overview: each group = {midi, rootMidi, color, rootLabel}.
+    // Dots take the group's color; root dots show rootLabel text and full opacity.
+    setMultiView(groups) {
+      this._multiGroups = groups || null;
+      this._regions     = null;
       this.render();
     }
 

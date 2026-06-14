@@ -15,7 +15,7 @@ A minor key signature always reflects the **natural minor scale** — regardless
 
 C natural minor uses three accidentals: B♭, E♭, and A♭. Those three flats become the key signature for all music in c minor.
 
-:::widget keyview {root: "C4", scale: "natural_minor", steps: false, labels: "degrees", altered: [3, 6, 7], interactive: true}
+:::widget scaleview {view: "keyboard", root: "C4", scale: "natural_minor", steps: false, labels: "degrees", altered: [3, 6, 7], interactive: true}
 :::
 
 :::widget keysigview {count: 3, type: "flats", readonly: true, showHint: true, showRelative: true}
